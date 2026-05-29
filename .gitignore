@@ -1,0 +1,23 @@
+# environment variables
+.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# uv
+.uv/
+
+# IDEs
+.idea/
+.vscode/
+
+# scratch outputs from the batch example
+.batch-runs/
+
+/planning
