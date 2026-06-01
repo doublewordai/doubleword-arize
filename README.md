@@ -4,7 +4,7 @@ AI agents can quickly become complex and expensive. Developing and running agent
 
 This project shows how AI agents can be traced end-to-end, cost effectively using the [Doubleword inference API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference) with [Arize Phoenix](https://arize.com/phoenix), an observability and evaluation layer. 
 
-We show a simple but reproducable implementation of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at a fraction of the cost of realtime usage. 
+In the workbook, we show a simple but reproducable implementation of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at a fraction of the cost of realtime usage. 
 
 <p align="center">
   <img src="images/demo-hero.png" height="auto" width="auto" alt="Doubleword" />
@@ -175,8 +175,8 @@ src/dwp/
   corpus.py          in-memory retrieval (swap for your own)
   evals/
     judges.py        Score model + shared judge prompt
-    online.py        ~50% off eval loop (autobatcher.AsyncOpenAI)
-    batch.py         ~90% off eval loop (autobatcher.BatchOpenAI)
+    online.py        Async eval loop (autobatcher.AsyncOpenAI)
+    batch.py         Async off eval loop (autobatcher.BatchOpenAI)
 examples/            one entry-point per scenario
 tests/               mocked suite (default) + tests/integration/ (opt-in)
 docs/guides/         how-to guides for each part of the stack
