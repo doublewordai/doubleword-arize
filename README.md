@@ -76,7 +76,7 @@ docker compose -f docker-compose.yaml up -d
 # Phoenix UI at http://localhost:6006
 
 # For pheonix only, when bringing to an existing stack:
-# docker compose -f docker-compose.yaml up -d compose.pheonix-only.yaml
+# docker compose -f compose.pheonix-only.yaml up -d
 ```
 
 Requires [Docker](https://www.docker.com/get-started/).
