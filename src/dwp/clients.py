@@ -13,8 +13,8 @@ def build_chat_client(mode: Mode | None = None) -> Any:
     """Return an OpenAI-compatible async client for the chosen Doubleword tier.
 
     - realtime : openai.AsyncOpenAI                  (hot path)
-    - async    : autobatcher.AsyncOpenAI             (~50% off realtime)
-    - batch    : autobatcher.BatchOpenAI             (~90% off, up to 24h)
+    - async    : autobatcher.AsyncOpenAI             (25-50% off realtime)
+    - batch    : autobatcher.BatchOpenAI             (50-75% off, up to 24h)
     """
     mode = mode or settings.mode
 

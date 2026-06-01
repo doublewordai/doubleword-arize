@@ -6,10 +6,10 @@ The right approach is to score model outputs off the critical path, after they'v
 
 Doubleword has two tiers purpose-built for this, both accessed through **autobatcher**, an open-source drop-in replacement for `AsyncOpenAI` that handles batching transparently.
 
-| Lane | Client | completion_window | Cost vs realtime | When results land |
-|---|---|---|---|---|
-| Online (async) | `autobatcher.AsyncOpenAI` | `1h` | ~50% off | Minutes–1 hour |
-| Batch | `autobatcher.BatchOpenAI` | `24h` | ~90% off | Up to 24 hours |
+| Lane | Client | Cost vs realtime | Best for |
+|---|---|---|---|
+| Async | `autobatcher.AsyncOpenAI` | 25-50% off | High-throughput inference where realtime latency isn't required |
+| Batch | `autobatcher.BatchOpenAI` | 50-75% off | Bulk workloads with up to a 24h SLA |
 
 **The punchline**: the two eval loops share the same judge prompt and the same Phoenix logging call. The only difference is one line: which autobatcher client you build.
 
@@ -25,7 +25,7 @@ pip install autobatcher
 
 You write normal async code. autobatcher collects your requests over a configurable window, submits them as a single batch job, and resolves the futures when the job completes. No manual file uploads, no polling loop, no code restructuring.
 
-### AsyncOpenAI: the 1-hour lane
+### AsyncOpenAI: the high-throughput lane
 
 ```python
 from autobatcher import AsyncOpenAI
@@ -33,7 +33,6 @@ from autobatcher import AsyncOpenAI
 async with AsyncOpenAI(
     api_key="your-doubleword-key",
     base_url="https://api.doubleword.ai/v1",
-    completion_window="1h",        # default for AsyncOpenAI
 ) as client:
     results = await asyncio.gather(*[
         client.chat.completions.create(model=model, messages=msgs)
@@ -89,17 +88,17 @@ Scores are 0.0–1.0. Results are Pydantic-validated `Score` objects before they
 
 ---
 
-## Online eval loop (autobatcher.AsyncOpenAI, ~50% off)
+## Online eval loop (autobatcher.AsyncOpenAI, 25-50% off)
 
 ```bash
 uv run python examples/run_async_evals.py
 ```
 
-**01  Fetch** recent `answering` spans from Phoenix via `px.Client().get_spans_dataframe()`
+**01  Fetch** recent `answering` spans from Phoenix via `Client().spans.get_spans_dataframe(...)`
 
 **02  Score** each span concurrently; judge calls fan out under an `asyncio.Semaphore`
 
-**03  Log** scores back as `SpanEvaluations(eval_name="quality")`; annotations appear on the original spans in Phoenix
+**03  Log** scores back via `Client().spans.log_span_annotations_dataframe(annotation_name="quality", ...)`; annotations appear on the original spans in Phoenix
 
 Filter by `eval.quality.label == 'low_relevance'` to find answers worth reviewing.
 
@@ -107,7 +106,7 @@ Implementation: [`src/dwp/evals/online.py`](../../src/dwp/evals/online.py)
 
 ---
 
-## Batch eval loop (autobatcher.BatchOpenAI, ~90% off)
+## Batch eval loop (autobatcher.BatchOpenAI, 50-75% off)
 
 ```bash
 uv run python examples/run_batch_evals.py
@@ -123,7 +122,7 @@ Implementation: [`src/dwp/evals/batch.py`](../../src/dwp/evals/batch.py)
 
 ## When to prefer each lane
 
-Use **online (async)** when you want scores within an hour: staging, post-deploy checks, rapid iteration.
+Use **async** when you want high-throughput scoring without paying realtime prices: staging, post-deploy checks, rapid iteration.
 
 Use **batch** when freshness doesn't matter: nightly quality sweeps, bulk evaluation of historical traces, cost-sensitive at scale.
 

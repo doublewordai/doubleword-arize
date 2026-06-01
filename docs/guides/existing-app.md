@@ -90,12 +90,12 @@ From there, add eval scores. [→ Async eval loop](./async-evals.md)
 
 ## Cheaper inference: switch to async or batch
 
-Once tracing is in place, swap your `AsyncOpenAI` import to the autobatcher equivalent — same call shape, ~50% off (async) or ~90% off (batch):
+Once tracing is in place, swap your `AsyncOpenAI` import to the autobatcher equivalent — same call shape, 25-50% off (async) or 50-75% off (batch):
 
 ```python
 # from openai import AsyncOpenAI         # full price
-from autobatcher import AsyncOpenAI      # ~50% off, ~1h
-# from autobatcher import BatchOpenAI    # ~90% off, up to 24h
+from autobatcher import AsyncOpenAI      # 25-50% off, high-throughput
+# from autobatcher import BatchOpenAI    # 50-75% off, up to 24h
 ```
 
 The autobatcher clients are async context managers — call them under `async with` so queued requests flush on exit. See [Async and batch evals](./async-evals.md) for the full pattern.

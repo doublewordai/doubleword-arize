@@ -1,4 +1,5 @@
-"""Online LLM-as-judge eval loop via autobatcher.AsyncOpenAI (~50% off, ~1h SLA).
+"""Online LLM-as-judge eval loop via autobatcher.AsyncOpenAI — Doubleword's
+high-throughput inference tier (25-50% off realtime).
 
 Run after generating traces with run_agent.py or run_concurrent.py.
 
@@ -21,7 +22,7 @@ from dwp.tracing import get_tracer_provider
 
 async def main() -> None:
     tp = get_tracer_provider()
-    msg.info("Scoring recent answer spans — autobatcher.AsyncOpenAI (~50% off realtime)...")
+    msg.info("Scoring recent answer spans — autobatcher.AsyncOpenAI (25-50% off realtime)...")
     result = await run_online_evals(lookback_hours=24)
     tp.force_flush()
     if not result.empty:

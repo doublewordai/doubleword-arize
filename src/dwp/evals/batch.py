@@ -1,6 +1,6 @@
 """Batch (24h) eval loop. Structurally identical to evals.online — the only
 meaningful difference is `build_chat_client(mode="batch")` vs `mode="async"`.
-That single swap is what delivers ~90% cost reduction vs realtime.
+That single swap is what delivers 50-75% cost reduction vs realtime.
 
 autobatcher.BatchOpenAI collects every `chat.completions.create` call inside
 the `async with` block, submits them as a single batch job, and resolves all
@@ -37,7 +37,7 @@ async def _score_row(
 
 
 async def run_batch_evals(lookback_hours: int = 24) -> pd.DataFrame:
-    """Score recent answer spans through the Doubleword batch tier (~90% off).
+    """Score recent answer spans through the Doubleword batch tier (50-75% off).
 
     Results are attached back to the original spans as `quality_batch`
     annotations in Phoenix.

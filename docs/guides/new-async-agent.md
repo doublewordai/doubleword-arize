@@ -1,6 +1,6 @@
 # Build an Async Agent with Doubleword & Phoenix
 
-A typical LLM agent - planning a response, retrieving context, composing an answer - runs in a few seconds. Inference is the expensive part. Doubleword's async tier runs the same requests at **~50% off realtime**. Batch mode takes it to **~90% off**, for any job where a few minutes or hours of latency is acceptable.
+A typical LLM agent - planning a response, retrieving context, composing an answer - runs in a few seconds. Inference is the expensive part. Doubleword's async tier runs the same requests at **25-50% off realtime**. Batch mode takes it to **50-75% off**, for any job where a few minutes or hours of latency is acceptable.
 
 This guide builds a working async search-and-answer agent from scratch. Every step is visible in Phoenix as a named span. Switching between Doubleword's three inference tiers requires changing one line of code.
 
@@ -88,10 +88,10 @@ Both the async and batch tiers are powered by [autobatcher](https://pypi.org/pro
 # realtime: standard openai.AsyncOpenAI
 from openai import AsyncOpenAI
 
-# async lane (~50% off, ~1h): autobatcher.AsyncOpenAI
+# async lane (25-50% off, high-throughput): autobatcher.AsyncOpenAI
 from autobatcher import AsyncOpenAI
 
-# batch lane (~90% off, 24h): autobatcher.BatchOpenAI
+# batch lane (50-75% off, 24h): autobatcher.BatchOpenAI
 from autobatcher import BatchOpenAI
 ```
 
@@ -107,7 +107,7 @@ Swap `MODE` in `.env`. No code changes.
 # 50% off realtime: background agents, eval loops
 MODE=async uv run python examples/run_concurrent.py
 
-# ~90% off realtime: bulk workloads, up to 24h SLA
+# 50-75% off realtime: bulk workloads, up to 24h SLA
 MODE=batch uv run python examples/run_concurrent.py
 ```
 

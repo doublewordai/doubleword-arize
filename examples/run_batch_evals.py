@@ -1,4 +1,4 @@
-"""Batch LLM-as-judge via autobatcher.BatchOpenAI (~90% off, up to 24h SLA).
+"""Batch LLM-as-judge via autobatcher.BatchOpenAI (50-75% off, up to 24h SLA).
 
 Same judge, same spans as run_async_evals.py. The only difference is which
 autobatcher client handles the requests.
@@ -26,7 +26,7 @@ async def main() -> None:
     tp = get_tracer_provider()
     msg.info(
         f"Batch eval — autobatcher.BatchOpenAI "
-        f"(completion_window={settings.batch_completion_window}, ~90% off realtime)..."
+        f"(completion_window={settings.batch_completion_window}, 50-75% off realtime)..."
     )
     result = await run_batch_evals(lookback_hours=24)
     tp.force_flush()

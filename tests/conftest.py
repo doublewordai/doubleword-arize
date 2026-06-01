@@ -40,7 +40,7 @@ def mock_span_df() -> pd.DataFrame:
             "attributes.dwp.query": ["what is OpenInference?", "how does batch save money?"],
             "attributes.output.value": [
                 json.dumps({"answer": "OpenInference is an OTel extension for AI tracing."}),
-                json.dumps({"answer": "Batch tier is ~90% cheaper than realtime."}),
+                json.dumps({"answer": "Batch tier is 50-75% cheaper than realtime."}),
             ],
         },
         index=["span-001", "span-002"],

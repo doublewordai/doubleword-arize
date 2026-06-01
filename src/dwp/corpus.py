@@ -37,7 +37,7 @@ _DOCS: tuple[Document, ...] = (
         title="Doubleword inference",
         text=(
             "Doubleword exposes an OpenAI-compatible API at api.doubleword.ai/v1 with three "
-            "tiers: realtime, async (~50% off), and batch (24h, ~90% off). One API key covers "
+            "tiers: realtime, async (25-50% off), and batch (24h, 50-75% off). One API key covers "
             "all three; upstream provider keys never appear in client code."
         ),
     ),

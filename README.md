@@ -92,8 +92,8 @@ Five queries run in parallel via `asyncio.gather`. In the Phoenix timeline you'l
 `MODE` controls which Doubleword tier `examples/run_agent.py` and `examples/run_concurrent.py` use:
 
 ```bash
-MODE=async uv run python examples/run_concurrent.py   # ~50% off
-MODE=batch uv run python examples/run_concurrent.py   # ~90% off
+MODE=async uv run python examples/run_concurrent.py   # 25-50% off
+MODE=batch uv run python examples/run_concurrent.py   # 50-75% off
 ```
 
 The agent code is identical across all three modes; only [`src/dwp/clients.py`](src/dwp/clients.py) `build_chat_client(mode=...)` changes which OpenAI-shaped client is returned.
@@ -103,8 +103,8 @@ The agent code is identical across all three modes; only [`src/dwp/clients.py`](
 After steps 5–7 have produced traces:
 
 ```bash
-uv run python examples/run_async_evals.py     # ~50% off, ~1h
-uv run python examples/run_batch_evals.py     # ~90% off, up to 24h
+uv run python examples/run_async_evals.py     # 25-50% off, high-throughput
+uv run python examples/run_batch_evals.py     # 50-75% off, up to 24h
 ```
 
 These read `answering` spans from Phoenix, score them with the judge in [`src/dwp/evals/judges.py`](src/dwp/evals/judges.py), and write the results back as `quality` / `quality_batch` annotations on the original spans. Filter by `eval.quality.label == 'low_relevance'` in Phoenix to find outputs worth reviewing.
@@ -125,11 +125,11 @@ from openai import AsyncOpenAI
 client = AsyncOpenAI(api_key="<DOUBLEWORD_API_KEY>", base_url="https://api.doubleword.ai/v1")
 ```
 
-For the cheaper tiers, swap the import — same call shape, ~50% / ~90% off:
+For the cheaper tiers, swap the import — same call shape, 25-50% / 50-75% off:
 
 ```python
-from autobatcher import AsyncOpenAI   # ~50% off, ~1h
-from autobatcher import BatchOpenAI   # ~90% off, up to 24h
+from autobatcher import AsyncOpenAI   # 25-50% off, high-throughput
+from autobatcher import BatchOpenAI   # 50-75% off, up to 24h
 ```
 
 The autobatcher clients are async context managers — use `async with` so queued requests flush on exit. See [docs/guides/async-evals.md](docs/guides/async-evals.md) for the eval-loop pattern.
