@@ -1,11 +1,15 @@
 <p align="center">
-  <a href="https://www.doubleword.ai"><img src="images/doubleword-logo.jpg" height="45" width="auto" alt="Doubleword" /></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://arize.com"><img src="images/arize-logo.jpg" height="28" width="auto" alt="Arize Phoenix" /></a>
+  <a href="https://www.doubleword.ai"><img src="images/doubleword-logo.jpg" height="45" width="auto" alt="Doubleword" /></a>
 </p>
 
 # Async Agent Observability with Doubleword + Arize Phoenix
 
-A working async search-and-answer agent traced end-to-end with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai) and [autobatcher](https://pypi.org/project/autobatcher/).
+This project shows a working async search-and-answer agent traced end-to-end with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai) and [autobatcher](https://pypi.org/project/autobatcher/).
+
+"C:\Users\jaedo\GitHub\doubleword-arize\images\demo-hero.png"
+<p align="center">
+  <img src="images/demo-hero.png" height="auto+" width="auto" alt="Doubleword" />
+</p>
 
 ### Why this matters
 
@@ -19,7 +23,7 @@ The other half is cost. Agentic workloads make many calls per request, so runnin
 | Async | ~50% off | ~1 hour | `autobatcher.AsyncOpenAI` |
 | Batch | ~90% off | Up to 24 hours | `autobatcher.BatchOpenAI` |
 
-Pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** batch. This project defaults to DeepSeek V4 Pro as **both** the chat model and the LLM-as-judge — running a top-tier model as judge is the whole point of the batch tier. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
+Pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** batch. This project defaults to DeepSeek V4 Pro as **both** the chat model and the LLM-as-judge — running a top-tier model as judge is a great way to save while maintaining high quality outputs in production. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
 
 ---
 
@@ -38,9 +42,7 @@ This project uses the [uv](https://docs.astral.sh/uv/) package manager. Copy the
 ```bash
 # macOS / Linux
 cp .env.example .env
-```
 
-```powershell
 # Windows PowerShell
 Copy-Item .env.example .env
 ```
@@ -57,7 +59,7 @@ docker compose -f docker-compose.yaml up -d
 # docker compose -f compose.phoenix-only.yaml up -d
 ```
 
-Requires [Docker](https://www.docker.com/get-started/). The UI opens on the empty `default` project — that's expected. The agent writes to its own project (`doubleword-arize`), auto-created on the first run below.
+Requires [Docker](https://www.docker.com/get-started/). The UI opens on the empty `default` project — that's expected. The agent writes to its own project (`doubleword-arize`), auto-created on the first run below. 
 
 ### 4. Install
 
