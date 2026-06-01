@@ -12,8 +12,7 @@ from __future__ import annotations
 import asyncio
 
 import pandas as pd
-import phoenix as px
-from phoenix.trace import SpanEvaluations
+from phoenix.client import Client
 from wasabi import msg
 
 from ..clients import build_chat_client
@@ -58,10 +57,9 @@ async def run_batch_evals(lookback_hours: int = 24) -> pd.DataFrame:
         return pd.DataFrame()
 
     sem = asyncio.Semaphore(settings.max_concurrency)
-    client = build_chat_client(mode="batch")
 
     # BatchOpenAI flushes the entire batch when the context manager exits.
-    async with client:
+    async with build_chat_client(mode="batch") as client:
         results = await asyncio.gather(
             *[_score_row(client, sem, span_id, q, a) for span_id, q, a in rows_to_score]
         )
@@ -72,7 +70,7 @@ async def run_batch_evals(lookback_hours: int = 24) -> pd.DataFrame:
             continue
         output_rows.append(
             {
-                "context.span_id": span_id,
+                "span_id": span_id,
                 "score": (score.relevance + (1 - score.hallucination_risk) + score.tone) / 3,
                 "label": "ok" if score.relevance >= 0.6 else "low_relevance",
                 "explanation": score.rationale,
@@ -83,8 +81,12 @@ async def run_batch_evals(lookback_hours: int = 24) -> pd.DataFrame:
         msg.warn("Batch returned no parsable results.")
         return pd.DataFrame()
 
-    out = pd.DataFrame(output_rows).set_index("context.span_id")
-
-    px.Client().log_evaluations(SpanEvaluations(eval_name="quality_batch", dataframe=out))
-    msg.good(f"Logged {len(out)} batch evaluations to Phoenix.")
+    out = pd.DataFrame(output_rows)
+    Client().spans.log_span_annotations_dataframe(
+        dataframe=out,
+        annotation_name="quality_batch",
+        annotator_kind="LLM",
+        sync=True,
+    )
+    msg.good(f"Logged {len(out)} batch annotations to Phoenix.")
     return out

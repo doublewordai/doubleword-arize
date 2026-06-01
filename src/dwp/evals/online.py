@@ -1,5 +1,5 @@
 """Online (async-tier) eval loop. Pulls recent answer spans, fans out judge
-calls under a semaphore, writes scores back as Phoenix span evaluations."""
+calls under a semaphore, writes scores back as Phoenix span annotations."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pandas as pd
-import phoenix as px
-from phoenix.trace import SpanEvaluations
+from phoenix.client import Client
+from phoenix.client.types.spans import SpanQuery
 from wasabi import msg
 
 from ..clients import build_chat_client
@@ -19,15 +19,14 @@ from .judges import Score, judge
 
 
 def _fetch_answer_spans(lookback_hours: int) -> pd.DataFrame:
-    """Read recent answering spans from Phoenix into a dataframe."""
-
+    """Read recent `answering` spans from Phoenix into a dataframe."""
     start = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
-    client = px.Client()
-    df = client.get_spans_dataframe(
-        f"name == 'answering' and start_time >= '{start.isoformat()}'",
+    query = SpanQuery().where("name == 'answering'")
+    return Client().spans.get_spans_dataframe(
+        query=query,
+        start_time=start,
         project_name=settings.project_name,
     )
-    return df
 
 
 async def _score_row(
@@ -60,17 +59,18 @@ async def run_online_evals(lookback_hours: int = 24) -> pd.DataFrame:
         msg.warn("No answering spans found in lookback window.")
         return pd.DataFrame()
 
-    client = build_chat_client(mode="async")
     sem = asyncio.Semaphore(settings.max_concurrency)
 
-    tasks = []
-    for span_id, row in df.iterrows():
-        q, a = _extract_qa(row)
-        if not a:
-            continue
-        tasks.append(_score_row(client, sem, str(span_id), q, a))
-
-    results = await asyncio.gather(*tasks)
+    # `async with` flushes the autobatcher queue on exit — without it,
+    # judge calls queued just before the script exits get silently dropped.
+    async with build_chat_client(mode="async") as client:
+        tasks = []
+        for span_id, row in df.iterrows():
+            q, a = _extract_qa(row)
+            if not a:
+                continue
+            tasks.append(_score_row(client, sem, str(span_id), q, a))
+        results = await asyncio.gather(*tasks)
 
     rows = []
     for span_id, score in results:
@@ -78,15 +78,21 @@ async def run_online_evals(lookback_hours: int = 24) -> pd.DataFrame:
             continue
         rows.append(
             {
-                "context.span_id": span_id,
+                "span_id": span_id,
                 "score": (score.relevance + (1 - score.hallucination_risk) + score.tone) / 3,
                 "label": "ok" if score.relevance >= 0.6 else "low_relevance",
                 "explanation": score.rationale,
             }
         )
-    out = pd.DataFrame(rows).set_index("context.span_id") if rows else pd.DataFrame()
+    if not rows:
+        return pd.DataFrame()
 
-    if not out.empty:
-        px.Client().log_evaluations(SpanEvaluations(eval_name="quality", dataframe=out))
-        msg.good(f"Logged {len(out)} quality evaluations to Phoenix.")
+    out = pd.DataFrame(rows)
+    Client().spans.log_span_annotations_dataframe(
+        dataframe=out,
+        annotation_name="quality",
+        annotator_kind="LLM",
+        sync=True,
+    )
+    msg.good(f"Logged {len(out)} quality annotations to Phoenix.")
     return out

@@ -95,3 +95,61 @@ async def test_run_no_search_path():
         result = await run(Query(text="hi"))
 
     assert result.citations == []
+
+
+# ----- Span instrumentation: the agent must create the spans Phoenix relies on. -----
+
+
+class _RecordingSpan:
+    def __init__(self, name: str):
+        self.name = name
+        self.attributes: dict[str, object] = {}
+
+    def set_attribute(self, key: str, value: object) -> None:
+        self.attributes[key] = value
+
+
+class _RecordingTracer:
+    """Captures every `start_as_current_span` call + `set_attribute` so tests
+    can assert the agent's span tree without standing up OpenTelemetry."""
+
+    def __init__(self) -> None:
+        self.spans: list[_RecordingSpan] = []
+
+    def start_as_current_span(self, name: str):
+        span = _RecordingSpan(name)
+        self.spans.append(span)
+
+        class _Ctx:
+            def __enter__(_self):
+                return span
+
+            def __exit__(_self, *exc):
+                return False
+
+        return _Ctx()
+
+
+async def test_run_emits_expected_spans_with_attributes():
+    """The agent must create `agent.run`, `planning`, `searching`, `answering`
+    spans with the attribute keys Phoenix queries / docs reference."""
+    plan_resp = make_chat_response('{"needs_search": true, "reason": "needs facts"}')
+    answer_resp = make_chat_response("OpenInference is an OTel extension for AI.")
+
+    client = MagicMock()
+    client.chat.completions.create = AsyncMock(side_effect=[plan_resp, answer_resp])
+    recording = _RecordingTracer()
+
+    with patch("dwp.agent.tracer", recording), patch(
+        "dwp.agent.build_chat_client", return_value=client
+    ):
+        await run(Query(text="what is OpenInference?"))
+
+    by_name = {s.name: s for s in recording.spans}
+    assert set(by_name) == {"agent.run", "planning", "searching", "answering"}
+    assert by_name["agent.run"].attributes["dwp.mode"] in {"realtime", "async", "batch"}
+    assert by_name["agent.run"].attributes["input.value"] == "what is OpenInference?"
+    assert by_name["planning"].attributes["dwp.needs_search"] is True
+    assert by_name["searching"].attributes["dwp.hits"] >= 1
+    assert by_name["answering"].attributes["dwp.answer_chars"] > 0
+    assert "output.value" in by_name["answering"].attributes
