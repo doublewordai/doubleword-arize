@@ -1,22 +1,26 @@
 # Trace and Untangle Agentic Workflows for Less
 
-A single AI agent can run reasoning and planning steps, retrieve data, call tool calls, and even spin up other agents. Developing and running agents in production is challenging, given the number of changing states and failure modes they present. Observing their state is one thing, but actively guarding quality is another. The spend on filtering outputs is often higher than direct spend on AI. 
+AI agents can quickly become complex and expensive. Developing and running agents in production is challenging, given the number of changing states and failure modes they present. Agentic workloads make many calls per request, so running evals at realtime prices doesn't scale. 
 
-This project shows how AI agents can be traced end-to-end, cost effectivelyusing the [Doubleword inference API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference) so you can save 
+This project shows how AI agents can be traced end-to-end, cost effectively using the [Doubleword inference API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference) with [Arize Phoenix](https://arize.com/phoenix), an observability and evaluation layer. 
 
-with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai).
+We show a simple but reproducable implementation of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at a fraction of the cost of realtime usage. 
 
 <p align="center">
-  <img src="images/demo-hero.png" height="auto+" width="auto" alt="Doubleword" />
+  <img src="images/demo-hero.png" height="auto" width="auto" alt="Doubleword" />
 </p>
 
 ### Why this matters
 
-These complex flows have steps each with its own latency, model, and failure mode. Input/output logging doesn't capture this; span-level tracing does. You see exactly which step caused a regression and can run evals against any span, not just the final output.
+Agents can run reasoning and planning steps, retrieve data, call tool calls, and even spin up other agents. These complex flows have steps each with its own latency, model, and diverse failure modes. 
 
-The other half is cost. Agentic workloads make many calls per request, so running evals at realtime prices doesn't scale. 
+Observing their state is one thing, but actively guarding quality of their outputs is another. Debugging often means re-running the whole agent, adding logging, and guessing. With span-level tracing you see, per request, whether the model decided to search, what it retrieved, how long each step took, and where the answer degraded. 
 
-Pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** batch. This project defaults to DeepSeek V4 Pro as **both** the chat model and the LLM-as-judge — running a top-tier model as judge is a great way to save while maintaining high quality outputs in production. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
+Input/output logging doesn't capture this but span-level tracing does. You can see exactly which step caused a regression. 
+
+The other half is cost. 
+
+This project defaults to DeepSeek V4 Pro as both the chat model and the LLM-as-judge. Running a top-tier model as judge is a great way to save while maintaining high quality outputs in production. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
 
 ---
 
