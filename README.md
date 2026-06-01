@@ -5,7 +5,9 @@
 
 # Async Agent Observability with Doubleword + Arize Phoenix
 
-In this example we run async AI agents and trace them end-to-end with [Arize Phoenix](https://arize.com/phoenix). We use [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to 90% less than realtime cost, using [Doubleword](https://www.doubleword.ai) for inference and [autobatcher](https://pypi.org/project/autobatcher/) for transparent batch scheduling. 
+In this example we run async AI agents and trace them end-to-end with [Arize Phoenix](https://arize.com/phoenix). We use [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals with deep at up to 90% less than realtime cost, using [Doubleword](https://www.doubleword.ai) for inference and [autobatcher](https://pypi.org/project/autobatcher/) for transparent batch scheduling. 
+
+
 
 ### Why This Matters
 
@@ -67,11 +69,14 @@ cp .env.example .env
 # Set DOUBLEWORD_API_KEY - the only credential you need for inference
 ```
 
-### 2. Start Phoenix
+### 2. Start Phoenix and Postgres
 
 ```bash
-docker compose -f docker/compose.yaml up -d
+docker compose -f docker-compose.yaml up -d
 # Phoenix UI at http://localhost:6006
+
+# For pheonix only, when bringing to an existing stack:
+# docker compose -f docker-compose.yaml up -d compose.pheonix-only.yaml
 ```
 
 Requires [Docker](https://www.docker.com/get-started/).
