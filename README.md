@@ -4,7 +4,9 @@ AI agents can quickly become complex and expensive. Developing and running agent
 
 This project shows how AI agents can be traced end-to-end, cost effectively using the [Doubleword inference API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference) with [Arize Phoenix](https://arize.com/phoenix), an observability and evaluation layer. 
 
-In the workbook, we show a simple but reproducable implementation of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at a fraction of the cost of realtime usage. 
+In the workbook, we show a simple but reproducable implementation of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at a fraction of the cost of realtime usage.
+
+> Doubleword exposes the same models across three tiers — **realtime**, **async**, and **batch** — under one API key. See **[doubleword.ai/pricing](https://doubleword.ai/pricing/)** for the live cost breakdown.
 
 <p align="center">
   <img src="images/demo-hero.png" height="auto" width="auto" alt="Doubleword" />
@@ -20,7 +22,7 @@ Input/output logging doesn't capture this but span-level tracing does. You can s
 
 The other half is cost. 
 
-This project defaults to DeepSeek V4 Pro as both the chat model and the LLM-as-judge. Running a top-tier model as judge is a great way to save while maintaining high quality outputs in production. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
+This project defaults to DeepSeek V4 Pro as both the chat model and the LLM-as-judge. Running a top-tier model as judge is a great way to save while maintaining high quality outputs in production.
 
 ---
 
@@ -92,8 +94,8 @@ Five queries run in parallel via `asyncio.gather`. In the Phoenix timeline you'l
 `MODE` controls which Doubleword tier `examples/run_agent.py` and `examples/run_concurrent.py` use:
 
 ```bash
-MODE=async uv run python examples/run_concurrent.py   # 25-50% off
-MODE=batch uv run python examples/run_concurrent.py   # 50-75% off
+MODE=async uv run python examples/run_concurrent.py   # cheaper, high-throughput
+MODE=batch uv run python examples/run_concurrent.py   # cheapest, up to 24h
 ```
 
 The agent code is identical across all three modes; only [`src/dwp/clients.py`](src/dwp/clients.py) `build_chat_client(mode=...)` changes which OpenAI-shaped client is returned.
@@ -103,8 +105,8 @@ The agent code is identical across all three modes; only [`src/dwp/clients.py`](
 After steps 5–7 have produced traces:
 
 ```bash
-uv run python examples/run_async_evals.py     # 25-50% off, high-throughput
-uv run python examples/run_batch_evals.py     # 50-75% off, up to 24h
+uv run python examples/run_async_evals.py     # cheaper, high-throughput
+uv run python examples/run_batch_evals.py     # cheapest, up to 24h
 ```
 
 These read `answering` spans from Phoenix, score them with the judge in [`src/dwp/evals/judges.py`](src/dwp/evals/judges.py), and write the results back as `quality` / `quality_batch` annotations on the original spans. Filter by `eval.quality.label == 'low_relevance'` in Phoenix to find outputs worth reviewing.
@@ -125,11 +127,11 @@ from openai import AsyncOpenAI
 client = AsyncOpenAI(api_key="<DOUBLEWORD_API_KEY>", base_url="https://api.doubleword.ai/v1")
 ```
 
-For the cheaper tiers, swap the import — same call shape, 25-50% / 50-75% off:
+For the cheaper tiers, swap the import — same call shape:
 
 ```python
-from autobatcher import AsyncOpenAI   # 25-50% off, high-throughput
-from autobatcher import BatchOpenAI   # 50-75% off, up to 24h
+from autobatcher import AsyncOpenAI   # cheaper, high-throughput
+from autobatcher import BatchOpenAI   # cheapest, up to 24h
 ```
 
 The autobatcher clients are async context managers — use `async with` so queued requests flush on exit. See [docs/guides/async-evals.md](docs/guides/async-evals.md) for the eval-loop pattern.
