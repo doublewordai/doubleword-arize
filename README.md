@@ -52,7 +52,7 @@ A working async search-and-answer agent instrumented from day one with span-firs
 
 Doubleword pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** on batch. 
 
-See: [doubleword.ai/pricing] for the latest date models and pricing. 
+See: [doubleword.ai/pricing](https://doubleword.ai/pricing/) for the latest date models and pricing. 
 
 ---
 
