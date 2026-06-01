@@ -7,9 +7,9 @@ def test_defaults_applied():
 
     s = Settings(doubleword_api_key="test-key", _env_file=None)
     assert s.mode == "realtime"
-    assert s.backend == "local"
     assert s.doubleword_base_url == "https://api.doubleword.ai/v1"
     assert s.phoenix_collector_endpoint == "http://localhost:6006"
+    assert s.project_name == "doubleword-arize"
     assert s.max_concurrency == 8
 
 
@@ -37,5 +37,5 @@ def test_model_defaults():
     from dwp.config import Settings
 
     s = Settings(doubleword_api_key="test-key", _env_file=None)
-    assert s.model_chat == "deepseek-ai-deepseek-v4-pro"
-    assert s.model_judge == "qwen3-5-7b-instruct"
+    assert s.model_chat == "deepseek-ai/DeepSeek-V4-Pro"
+    assert s.model_judge == "deepseek-ai/DeepSeek-V4-Pro"

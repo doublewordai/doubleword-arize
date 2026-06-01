@@ -47,7 +47,7 @@ That's the only required change to your application code. `auto_instrument=True`
 ## Step 3: Start Phoenix
 
 ```bash
-docker compose -f docker/compose.yaml up -d
+docker compose -f docker-compose.yaml up -d
 # visit http://localhost:6006
 ```
 

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     mode: Mode = "realtime"
     model_chat: str = "deepseek-ai/DeepSeek-V4-Pro"
-    model_judge: str = "Qwen/Qwen3.5-9B"
+    model_judge: str = "deepseek-ai/DeepSeek-V4-Pro"
     max_concurrency: int = 8
 
     project_name: str = "doubleword-arize"

@@ -23,10 +23,12 @@ Doubleword pricing on DeepSeek V4 Pro: **$1.74 / $3.48** per million tokens real
 ```bash
 cp .env.example .env
 # set DOUBLEWORD_API_KEY=your-key
-# leave MODE=realtime and BACKEND=local for now
+# leave MODE=realtime for now
 uv sync
-docker compose -f docker/compose.yaml up -d
+docker compose -f docker-compose.yaml up -d
 ```
+
+> All other settings have working defaults in [`src/dwp/config.py`](../../src/dwp/config.py); override per-deploy in your `.env`.
 
 Visit `http://localhost:6006`. Phoenix is running.
 

@@ -52,7 +52,9 @@ A working async search-and-answer agent instrumented from day one with span-firs
 | Async | Results in minutes | ~50% off |
 | Batch | Up to 24h SLA | ~90% off |
 
-Doubleword pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** on batch. 
+Doubleword pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** on batch.
+
+This project defaults to **DeepSeek V4 Pro for both the chat agent and the LLM-as-judge**. Running a top-tier model as judge is what makes the batch tier worth using — same model, same prompts, ~90% cheaper. Swap models in `.env` or change the default in [`src/dwp/config.py`](src/dwp/config.py).
 
 See: [doubleword.ai/pricing](https://doubleword.ai/pricing/) for the latest date models and pricing. 
 
@@ -76,7 +78,9 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-Open `.env` and replace the `DOUBLEWORD_API_KEY=dw-...` placeholder with the key from [app.doubleword.ai](https://app.doubleword.ai/). The other variables already have working defaults — leave them alone unless you need to change them.
+Open `.env` and replace the `DOUBLEWORD_API_KEY=dw-...` placeholder with the key from [app.doubleword.ai](https://app.doubleword.ai/).
+
+All other settings — model names, project name, Phoenix endpoint, concurrency, batch SLA — have working defaults baked into [`src/dwp/config.py`](src/dwp/config.py). You only need to add a setting to your `.env` if you want to override one. `.env` wins over `config.py` defaults.
 
 ### 2. Start Phoenix and Postgres
 
