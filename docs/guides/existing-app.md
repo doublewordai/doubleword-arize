@@ -85,3 +85,17 @@ After a few requests, Phoenix shows:
 - A filterable span list: sort by latency, filter by span name, search inputs
 
 From there, add eval scores. [→ Async eval loop](./async-evals.md)
+
+---
+
+## Cheaper inference: switch to async or batch
+
+Once tracing is in place, swap your `AsyncOpenAI` import to the autobatcher equivalent — same call shape, ~50% off (async) or ~90% off (batch):
+
+```python
+# from openai import AsyncOpenAI         # full price
+from autobatcher import AsyncOpenAI      # ~50% off, ~1h
+# from autobatcher import BatchOpenAI    # ~90% off, up to 24h
+```
+
+The autobatcher clients are async context managers — call them under `async with` so queued requests flush on exit. See [Async and batch evals](./async-evals.md) for the full pattern.

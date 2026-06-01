@@ -128,5 +128,3 @@ Use **online (async)** when you want scores within an hour: staging, post-deploy
 Use **batch** when freshness doesn't matter: nightly quality sweeps, bulk evaluation of historical traces, cost-sensitive at scale.
 
 Both can run simultaneously. Phoenix merges `quality` and `quality_batch` annotations on the same spans.
-
-→ [Switch observability backends](./local-vs-cloud.md)

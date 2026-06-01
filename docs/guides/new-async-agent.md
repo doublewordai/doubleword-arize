@@ -4,17 +4,7 @@ A typical LLM agent - planning a response, retrieving context, composing an answ
 
 This guide builds a working async search-and-answer agent from scratch. Every step is visible in Phoenix as a named span. Switching between Doubleword's three inference tiers requires changing one line of code.
 
----
-
-## The economics
-
-| Tier | SLA | Cost vs realtime | Use case |
-|---|---|---|---|
-| Realtime | Immediate | Full price | Interactive, latency-critical |
-| Async | ~minutes | ~50% off | Background agents, pipelines |
-| Batch | Up to 24h | ~90% off | Bulk evals, synthetic data |
-
-Doubleword pricing on DeepSeek V4 Pro: **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** batch. One API key. No upstream provider credentials.
+See the [README](../../README.md#cost-at-a-glance) for the tier / pricing table.
 
 ---
 
@@ -124,4 +114,3 @@ MODE=batch uv run python examples/run_concurrent.py
 The agent produces identical output. Phoenix shows the same span trees. The cost is different.
 
 → [Add LLM-as-judge evals](./async-evals.md)
-→ [Switch observability backends](./local-vs-cloud.md)

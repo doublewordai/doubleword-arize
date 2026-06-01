@@ -5,68 +5,35 @@
 
 # Async Agent Observability with Doubleword + Arize Phoenix
 
-In this example we run async AI agents and trace them end-to-end with [Arize Phoenix](https://arize.com/phoenix). We use [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals with deep at up to 90% less than realtime cost, using [Doubleword](https://www.doubleword.ai) for inference and [autobatcher](https://pypi.org/project/autobatcher/) for transparent batch scheduling. 
+A working async search-and-answer agent traced end-to-end with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai) and [autobatcher](https://pypi.org/project/autobatcher/).
 
+### Why this matters
 
+A single agent request can run a planning step, a retrieval, a tool call, and a final answer — each with its own latency, model, and failure mode. Input/output logging doesn't capture this; span-level tracing does. You see exactly which step caused a regression and can run evals against any span, not just the final output.
 
-### Why This Matters
+The other half is cost. Agentic workloads make many calls per request, so running evals at realtime prices doesn't scale. Doubleword's async tier is ~50% cheaper; batch is ~90% cheaper. One key. One SDK shape.
 
-Agents are not the same as LLM calls. A single user request can trigger a planning step, a retrieval, a tool call, and a final answer, each with its own latency, its own model, and its own failure mode. Standard input/output tracing does not capture this. When something goes wrong, you cannot tell which step caused it.
+| Tier | Cost vs realtime | SLA | Client |
+|---|---|---|---|
+| Realtime | Full price | Immediate | `openai.AsyncOpenAI` |
+| Async | ~50% off | ~1 hour | `autobatcher.AsyncOpenAI` |
+| Batch | ~90% off | Up to 24 hours | `autobatcher.BatchOpenAI` |
 
-Debugging means re-running the whole agent, adding logging, and guessing. With span-level tracing you see, per request, whether the model decided to search, what it retrieved, how long each step took, and where the answer degraded. You can run LLM-as-a-judge evals against the *planning* span, not just the final output.
-
-The second problem is cost. Agentic workflows make many model calls per request, so running quality filters and evals at realtime prices is prohibitive at scale. Doubleword's async tier cuts that by ~50%. The batch tier, powered by [autobatcher](https://pypi.org/project/autobatcher/) (a drop-in replacement for `AsyncOpenAI`), cuts it by ~90%, with no code changes beyond swapping one environment variable.
-
-| Tier | Eval cost vs realtime | SLA |
-|---|---|---|
-| Realtime | Full price | Immediate |
-| Async (`autobatcher.AsyncOpenAI`) | ~50% off | ~1 hour |
-| Batch (`autobatcher.BatchOpenAI`) | ~90% off | Up to 24 hours |
-
-One Doubleword API key covers all three tiers.
+Pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** batch. This project defaults to DeepSeek V4 Pro as **both** the chat model and the LLM-as-judge — running a top-tier model as judge is the whole point of the batch tier. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
 
 ---
 
-## What's in here
+## Tutorial
 
-A working async search-and-answer agent instrumented from day one with span-first design. Phoenix shows the full trace tree per request and a separate eval loop scores recent agent outputs and attaches scores back to the original spans.
+### 1. Get a Doubleword API key
 
-- **Span-first agent design.** Each agent step maps to a Phoenix span. Concurrent requests produce overlapping root traces. You see latency, inputs, and outputs at every level.
-- **Two eval lanes, same judge.** Online async evals (~50% off) for fast feedback. Batch evals (~90% off) for nightly sweeps. One line of code apart.
-- **Local-first observability.** Traces and eval scores stay on your machine. Phoenix runs in Docker with no cloud account needed.
+1. Sign in at [app.doubleword.ai](https://app.doubleword.ai/).
+2. Open the **API Keys** page in the dashboard.
+3. Create a key and copy it. The same key covers realtime, async, and batch.
 
-### Guides
+### 2. Configure
 
-- [Build a new async agent](docs/guides/new-async-agent.md): start here if you're building from scratch
-- [Add observability to an existing app](docs/guides/existing-app.md): two additions, no architecture changes
-- [Async and batch evals](docs/guides/async-evals.md): LLM-as-judge off the hot path
-- [Local Phoenix setup](docs/guides/local-vs-cloud.md): Docker, endpoints, what you see
-
----
-
-## Cost at a glance
-
-| Tier | How it works | vs realtime |
-|---|---|---|
-| Realtime | Immediate response | Full price |
-| Async | Results in minutes | ~50% off |
-| Batch | Up to 24h SLA | ~90% off |
-
-Doubleword pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** on batch.
-
-This project defaults to **DeepSeek V4 Pro for both the chat agent and the LLM-as-judge**. Running a top-tier model as judge is what makes the batch tier worth using — same model, same prompts, ~90% cheaper. Swap models in `.env` or change the default in [`src/dwp/config.py`](src/dwp/config.py).
-
-See: [doubleword.ai/pricing](https://doubleword.ai/pricing/) for the latest date models and pricing. 
-
----
-
-## Quick start
-
-In this project we use the [uv](https://docs.astral.sh/uv/) package manager. Log in to [app.doubleword.ai](https://app.doubleword.ai/) to pick up a `DOUBLEWORD_API_KEY`.
-
-### 1. Configure
-
-Copy the example env file and set your Doubleword key:
+This project uses the [uv](https://docs.astral.sh/uv/) package manager. Copy the example env file and paste your key:
 
 ```bash
 # macOS / Linux
@@ -78,70 +45,123 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-Open `.env` and replace the `DOUBLEWORD_API_KEY=dw-...` placeholder with the key from [app.doubleword.ai](https://app.doubleword.ai/).
+Open `.env` and replace the `DOUBLEWORD_API_KEY=dw-...` placeholder with your key. Every other setting (model names, project name, Phoenix endpoint, concurrency, batch SLA) has a working default in [`src/dwp/config.py`](src/dwp/config.py) — only override what you need in `.env`; `.env` wins.
 
-All other settings — model names, project name, Phoenix endpoint, concurrency, batch SLA — have working defaults baked into [`src/dwp/config.py`](src/dwp/config.py). You only need to add a setting to your `.env` if you want to override one. `.env` wins over `config.py` defaults.
-
-### 2. Start Phoenix and Postgres
+### 3. Start Phoenix
 
 ```bash
 docker compose -f docker-compose.yaml up -d
 # Phoenix UI at http://localhost:6006
-
-# Phoenix only (no Postgres) — use this when bringing it into an existing stack:
+#
+# Phoenix-only (no Postgres), for an existing stack:
 # docker compose -f compose.phoenix-only.yaml up -d
 ```
 
-Requires [Docker](https://www.docker.com/get-started/).
+Requires [Docker](https://www.docker.com/get-started/). The UI opens on the empty `default` project — that's expected. The agent writes to its own project (`doubleword-arize`), auto-created on the first run below.
 
-> **Note:** Phoenix ships with an empty project named `default`. If you open the UI now, that's what you'll see — that's expected. The agent writes to its own project (`doubleword-arize`, set via `PROJECT_NAME`), which is created automatically the first time you run step 4.
-
-### 3. Install
+### 4. Install
 
 ```bash
 uv sync --extra dev
 ```
 
-### 4. Run the agent
+### 5. Run the agent (realtime)
 
 ```bash
 uv run python examples/run_agent.py "what is OpenInference?"
 ```
 
-On success the script prints `Trace sent to Phoenix → http://localhost:6006`. To see the trace:
+**What you should see:** the script prints an answer, then `Trace sent to Phoenix`. Open [http://localhost:6006/projects](http://localhost:6006/projects), click into **doubleword-arize**, and you'll see one trace:
 
-1. Open [http://localhost:6006/projects](http://localhost:6006/projects) (or click **Projects** in the left nav).
-2. Click into the **doubleword-arize** project — *not* `default`, which stays empty.
-3. You'll see one root trace `agent.run` with `planning`, (optional) `searching`, and `answering` child spans, plus a `ChatCompletion` LLM span under each model call.
-
-Quick sanity check from the CLI:
-
-```bash
-curl http://localhost:6006/v1/projects
-# Expect: a project named "doubleword-arize" in the response.
+```
+agent.run
+├─ planning      (LLM: ChatCompletion)
+├─ searching     (optional, only if planner decides)
+└─ answering     (LLM: ChatCompletion)
 ```
 
-### 5. Run concurrent traces
+### 6. Fan out concurrent traces
 
 ```bash
 uv run python examples/run_concurrent.py
 ```
 
-Five queries run in parallel via `asyncio.gather`. In the **doubleword-arize** project you'll see five overlapping root traces on the timeline — the async-first design in practice.
+Five queries run in parallel via `asyncio.gather`. In the Phoenix timeline you'll see five overlapping root traces — the async-first design in practice.
 
-### 6. Score outputs with evals
+### 7. Try the cheaper tiers
 
-First make sure you have some traces from steps 4–5, then:
+`MODE` controls which Doubleword tier `examples/run_agent.py` and `examples/run_concurrent.py` use:
 
 ```bash
-# Async lane: results in minutes, ~50% off realtime
-MODE=async uv run python examples/run_async_evals.py
-
-# Batch lane: up to 24h, ~90% off realtime
-MODE=batch uv run python examples/run_batch_evals.py
+MODE=async uv run python examples/run_concurrent.py   # ~50% off
+MODE=batch uv run python examples/run_concurrent.py   # ~90% off
 ```
 
-Phoenix shows `quality` and `quality_batch` annotations on the answer spans. Filter by `eval.quality.label == 'low_relevance'` to find outputs worth reviewing.
+The agent code is identical across all three modes; only [`src/dwp/clients.py`](src/dwp/clients.py) `build_chat_client(mode=...)` changes which OpenAI-shaped client is returned.
+
+### 8. Score outputs with LLM-as-judge evals
+
+After steps 5–7 have produced traces:
+
+```bash
+uv run python examples/run_async_evals.py     # ~50% off, ~1h
+uv run python examples/run_batch_evals.py     # ~90% off, up to 24h
+```
+
+These read `answering` spans from Phoenix, score them with the judge in [`src/dwp/evals/judges.py`](src/dwp/evals/judges.py), and write the results back as `quality` / `quality_batch` annotations on the original spans. Filter by `eval.quality.label == 'low_relevance'` in Phoenix to find outputs worth reviewing.
+
+---
+
+## Use it in your own app
+
+Two additions, no architecture changes — see [docs/guides/existing-app.md](docs/guides/existing-app.md). The short version:
+
+```python
+# 1. Bootstrap Phoenix tracing once at startup
+from phoenix.otel import register
+register(project_name="my-app", auto_instrument=True, batch=True)
+
+# 2. Point the OpenAI SDK at Doubleword (drop-in)
+from openai import AsyncOpenAI
+client = AsyncOpenAI(api_key="<DOUBLEWORD_API_KEY>", base_url="https://api.doubleword.ai/v1")
+```
+
+For the cheaper tiers, swap the import — same call shape, ~50% / ~90% off:
+
+```python
+from autobatcher import AsyncOpenAI   # ~50% off, ~1h
+from autobatcher import BatchOpenAI   # ~90% off, up to 24h
+```
+
+The autobatcher clients are async context managers — use `async with` so queued requests flush on exit. See [docs/guides/async-evals.md](docs/guides/async-evals.md) for the eval-loop pattern.
+
+---
+
+## Guides
+
+- [Build a new async agent](docs/guides/new-async-agent.md) — span-first design from scratch
+- [Add observability to an existing app](docs/guides/existing-app.md) — two additions, no architecture changes
+- [Async and batch evals](docs/guides/async-evals.md) — LLM-as-judge off the hot path
+
+---
+
+## Tests
+
+```bash
+uv run pytest                             # 41 mocked tests, no network
+RUN_INTEGRATION=1 uv run pytest -m integration   # 3 real-API tests (one per mode)
+```
+
+The default suite has no external dependencies. The opt-in integration suite hits the real Doubleword API once per mode (realtime / async / batch) and asserts a non-empty completion.
+
+---
+
+## Troubleshooting
+
+- **Phoenix won't start.** Check `docker ps` — port `6006` (UI) and `4317` (OTLP) need to be free. `docker compose logs phoenix` shows startup errors.
+- **No spans in the UI.** Phoenix's landing page shows the empty `default` project. Navigate to **Projects → doubleword-arize**.
+- **`run_async_evals.py` says "No answering spans found".** Run step 5 or 6 first to produce `answering` spans, then re-run.
+- **Integration tests skipped.** They only run with `RUN_INTEGRATION=1` *and* a real `DOUBLEWORD_API_KEY` in `.env`.
 
 ---
 
@@ -149,18 +169,16 @@ Phoenix shows `quality` and `quality_batch` annotations on the answer spans. Fil
 
 ```
 src/dwp/
-  config.py          env → validated settings (pydantic-settings)
-  tracing.py         one-line bootstrap, local Phoenix
+  config.py          env → validated settings; defaults live here
+  tracing.py         one-line Phoenix bootstrap
   clients.py         Doubleword client factory: realtime / async / batch
-  agent.py           span-first async agent
+  agent.py           span-first async agent (planning / searching / answering)
   corpus.py          in-memory retrieval (swap for your own)
   evals/
-    judges.py        Pydantic Score + shared judge prompt
-    online.py        async eval loop
-    batch.py         24h batch eval loop
+    judges.py        Score model + shared judge prompt
+    online.py        ~50% off eval loop (autobatcher.AsyncOpenAI)
+    batch.py         ~90% off eval loop (autobatcher.BatchOpenAI)
 examples/            one entry-point per scenario
-tests/               pytest suite, all external calls mocked
-docker/              local Phoenix (with and without Postgres)
+tests/               mocked suite (default) + tests/integration/ (opt-in)
 docs/guides/         how-to guides for each part of the stack
 ```
-
