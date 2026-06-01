@@ -1,23 +1,20 @@
-# Async Agent Observability with Doubleword + Arize Phoenix
+# Trace and Untangle Agentic Workflows for Less
 
-This project shows a working async search-and-answer agent traced end-to-end with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai) and [autobatcher](https://pypi.org/project/autobatcher/).
+A single AI agent can run reasoning and planning steps, retrieve data, call tool calls, and even spin up other agents. Developing and running agents in production is challenging, given the number of changing states and failure modes they present. Observing their state is one thing, but actively guarding quality is another. The spend on filtering outputs is often higher than direct spend on AI. 
 
-"C:\Users\jaedo\GitHub\doubleword-arize\images\demo-hero.png"
+This project shows how AI agents can be traced end-to-end, cost effectivelyusing the [Doubleword inference API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference) so you can save 
+
+with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai).
+
 <p align="center">
   <img src="images/demo-hero.png" height="auto+" width="auto" alt="Doubleword" />
 </p>
 
 ### Why this matters
 
-A single agent request can run a planning step, a retrieval, a tool call, and a final answer — each with its own latency, model, and failure mode. Input/output logging doesn't capture this; span-level tracing does. You see exactly which step caused a regression and can run evals against any span, not just the final output.
+These complex flows have steps each with its own latency, model, and failure mode. Input/output logging doesn't capture this; span-level tracing does. You see exactly which step caused a regression and can run evals against any span, not just the final output.
 
-The other half is cost. Agentic workloads make many calls per request, so running evals at realtime prices doesn't scale. Doubleword's async tier is ~50% cheaper; batch is ~90% cheaper. One key. One SDK shape.
-
-| Tier | Cost vs realtime | SLA | Client |
-|---|---|---|---|
-| Realtime | Full price | Immediate | `openai.AsyncOpenAI` |
-| Async | ~50% off | ~1 hour | `autobatcher.AsyncOpenAI` |
-| Batch | ~90% off | Up to 24 hours | `autobatcher.BatchOpenAI` |
+The other half is cost. Agentic workloads make many calls per request, so running evals at realtime prices doesn't scale. 
 
 Pricing on DeepSeek V4 Pro (May 2026): **$1.74 / $3.48** per million tokens realtime → **$0.87 / $1.74** batch. This project defaults to DeepSeek V4 Pro as **both** the chat model and the LLM-as-judge — running a top-tier model as judge is a great way to save while maintaining high quality outputs in production. See [doubleword.ai/pricing](https://doubleword.ai/pricing/).
 
