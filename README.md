@@ -64,10 +64,19 @@ In this project we use the [uv](https://docs.astral.sh/uv/) package manager. Log
 
 ### 1. Configure
 
+Copy the example env file and set your Doubleword key:
+
 ```bash
+# macOS / Linux
 cp .env.example .env
-# Set DOUBLEWORD_API_KEY - the only credential you need for inference
 ```
+
+```powershell
+# Windows PowerShell
+Copy-Item .env.example .env
+```
+
+Open `.env` and replace the `DOUBLEWORD_API_KEY=dw-...` placeholder with the key from [app.doubleword.ai](https://app.doubleword.ai/). The other variables already have working defaults — leave them alone unless you need to change them.
 
 ### 2. Start Phoenix and Postgres
 
@@ -75,11 +84,13 @@ cp .env.example .env
 docker compose -f docker-compose.yaml up -d
 # Phoenix UI at http://localhost:6006
 
-# For pheonix only, when bringing to an existing stack:
-# docker compose -f compose.pheonix-only.yaml up -d
+# Phoenix only (no Postgres) — use this when bringing it into an existing stack:
+# docker compose -f compose.phoenix-only.yaml up -d
 ```
 
 Requires [Docker](https://www.docker.com/get-started/).
+
+> **Note:** Phoenix ships with an empty project named `default`. If you open the UI now, that's what you'll see — that's expected. The agent writes to its own project (`doubleword-arize`, set via `PROJECT_NAME`), which is created automatically the first time you run step 4.
 
 ### 3. Install
 
@@ -93,7 +104,18 @@ uv sync --extra dev
 uv run python examples/run_agent.py "what is OpenInference?"
 ```
 
-Open `http://localhost:6006`. You should see one root trace with `planning`, `searching`, and `answering` spans, plus an OpenAI span under each model call.
+On success the script prints `Trace sent to Phoenix → http://localhost:6006`. To see the trace:
+
+1. Open [http://localhost:6006/projects](http://localhost:6006/projects) (or click **Projects** in the left nav).
+2. Click into the **doubleword-arize** project — *not* `default`, which stays empty.
+3. You'll see one root trace `agent.run` with `planning`, (optional) `searching`, and `answering` child spans, plus a `ChatCompletion` LLM span under each model call.
+
+Quick sanity check from the CLI:
+
+```bash
+curl http://localhost:6006/v1/projects
+# Expect: a project named "doubleword-arize" in the response.
+```
 
 ### 5. Run concurrent traces
 
@@ -101,7 +123,7 @@ Open `http://localhost:6006`. You should see one root trace with `planning`, `se
 uv run python examples/run_concurrent.py
 ```
 
-Five queries run in parallel via `asyncio.gather`. Phoenix shows five overlapping root traces; this is the async-first design in practice.
+Five queries run in parallel via `asyncio.gather`. In the **doubleword-arize** project you'll see five overlapping root traces on the timeline — the async-first design in practice.
 
 ### 6. Score outputs with evals
 

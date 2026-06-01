@@ -1,5 +1,5 @@
 [project]
-name = "doubleword-pydantic"
+name = "doubleword-arize"
 version = "0.1.0"
 description = "Doubleword async agent PoC. Single Doubleword key, three inference tiers (realtime / async / batch), local Phoenix observability."
 readme = "README.md"

@@ -635,7 +635,7 @@ wheels = [
 ]
 
 [[package]]
-name = "doubleword-pydantic"
+name = "doubleword-arize"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

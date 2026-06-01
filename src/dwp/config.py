@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     model_judge: str = "Qwen/Qwen3.5-9B"
     max_concurrency: int = 8
 
-    project_name: str = "doubleword-pydantic"
+    project_name: str = "doubleword-arize"
 
     phoenix_collector_endpoint: str = "http://localhost:6006"
 
