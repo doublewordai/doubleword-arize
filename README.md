@@ -1,7 +1,3 @@
-<p align="center">
-  <a href="https://www.doubleword.ai"><img src="images/doubleword-logo.jpg" height="45" width="auto" alt="Doubleword" /></a>
-</p>
-
 # Async Agent Observability with Doubleword + Arize Phoenix
 
 This project shows a working async search-and-answer agent traced end-to-end with [Arize Phoenix](https://arize.com/phoenix), scored by [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to **90% off realtime** via [Doubleword](https://www.doubleword.ai) and [autobatcher](https://pypi.org/project/autobatcher/).
