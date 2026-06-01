@@ -5,7 +5,7 @@
 
 # Async Agent Observability with Doubleword + Arize Phoenix
 
-Running async agents traced end-to-end with [Arize Phoenix](https://arize.com/phoenix), with [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals running at up to 90% less than realtime cost, using [Doubleword](https://www.doubleword.ai) for inference and [autobatcher](https://pypi.org/project/autobatcher/) for transparent batch scheduling. In this example we run async AI agents and evals 
+In this example we run async AI agents and trace them end-to-end with [Arize Phoenix](https://arize.com/phoenix). We use [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at up to 90% less than realtime cost, using [Doubleword](https://www.doubleword.ai) for inference and [autobatcher](https://pypi.org/project/autobatcher/) for transparent batch scheduling. 
 
 ### Why This Matters
 
