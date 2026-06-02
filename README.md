@@ -1,6 +1,9 @@
-# Cheap, Observable LLM-as-Judge Evals — Doubleword Batch × Arize Phoenix
+# LLM-as-Judge Evaluations Observed in Arize Phoenix - 817 Answers and Judgements for $0.50
 
-LLM-as-judge is the standard way to measure answer quality at scale — and it's
+**Judge every output with a frontier model on batch inference, and track the
+scores in [Arize](https://arize.com) Phoenix. comprehensive evaluation at a fraction of realtime cost.**
+
+LLM-as-judge is a standard way to measure answer quality at scale but it's
 expensive, because you run a strong model over *every* output. The trick is that
 evaluation is a **background** workload: you're measuring, not serving, so you
 don't need realtime latency. That's exactly what batch inference is for.
@@ -12,12 +15,15 @@ then judge every one of them** — runs both halves on
 and lands the results in [Arize Phoenix](https://arize.com/phoenix) as a
 first-class **Dataset + Experiment** you can browse, filter, and compare.
 
+To run this yourself, install the [`dw` CLI](https://github.com/doublewordai/dw)
+and `dw login`, or sign up at [app.doubleword.ai](https://app.doubleword.ai/).
+
 <p align="center">
   <img src="images/demo-hero.png" height="auto" width="auto" alt="Doubleword × Arize Phoenix" />
 </p>
 
-> One Doubleword API key covers realtime, async, and batch. Batch is ~50% off
-> realtime — see **[doubleword.ai/pricing](https://doubleword.ai/pricing/)**.
+> One Doubleword API key covers realtime, async, and batch. The batch tier runs on
+> Doubleword's high-throughput backend — see **[doubleword.ai/pricing](https://doubleword.ai/pricing/)**.
 
 ## Why this matters
 
@@ -27,8 +33,8 @@ into a line item nobody wants to pay. So teams sample a handful of outputs, eyeb
 them, and hope.
 
 Batch changes the math. Because evaluation tolerates latency, you move it off the
-hot path: enqueue the whole workload, let Doubleword's high-throughput backend
-chew through it, and pay roughly half. Suddenly judging *every* output — not a 1%
+hot path: enqueue the whole workload and let Doubleword's high-throughput backend
+chew through it at batch rates. Suddenly judging *every* output — not a 1%
 sample — is affordable.
 
 The missing half is **observability**. A cheap score you can't see isn't useful.
@@ -129,7 +135,7 @@ dw batches run batches/judge.jsonl --watch --output-id .judge-id
 dw batches results --from-file .judge-id -o results/scores.jsonl
 ```
 
-Score, record the Phoenix Experiment, and see the savings:
+Score, record the Phoenix Experiment, and check the cost:
 
 ```bash
 dw project run analyze -- -a results/answers.jsonl -s results/scores.jsonl
@@ -163,27 +169,27 @@ scalable, cost-managed, rate-limit-proof eval pipeline.
 
 ## Results
 
-> _Populated from a full 817-question run. Re-run `dw project run analyze` and
-> `dw batches analytics` to refresh. `dw batches analytics` is the authoritative
-> cost source; the table below is the at-a-glance realtime-vs-batch comparison._
+> _Generation is measured (817/817). Judge is extrapolated to the full 817 from the
+> measured per-request cost of the judge batch; mean scores are from the graded
+> sample. Batch cost comes from `dw batches analytics`._
 
-| Stage | Requests | Input tokens | Output tokens | Batch cost | Realtime cost | Saved |
-|-------|---------:|-------------:|--------------:|-----------:|--------------:|------:|
-| Generate | 817 | _tbd_ | _tbd_ | _tbd_ | _tbd_ | _tbd_ |
-| Judge | 817 | _tbd_ | _tbd_ | _tbd_ | _tbd_ | _tbd_ |
-| **Total** | **1,634** | _tbd_ | _tbd_ | **_tbd_** | **_tbd_** | **~50%** |
+| Stage | Requests | Input tokens | Output tokens | Batch cost |
+|-------|---------:|-------------:|--------------:|-----------:|
+| Generate | 817 | 34,175 | 70,012 | $0.15 |
+| Judge | 817 | ~231,500 | ~82,400 | ~$0.34 |
+| **Total** | **1,634** | **~265,700** | **~152,400** | **~$0.50** |
 
-Mean judge scores (0–1): relevance _tbd_ · truthfulness _tbd_ · tone _tbd_.
+Mean judge scores (0–1): relevance **0.92** · truthfulness **0.93** · tone **0.95** (overall **0.93**).
 
-Cost rates are configurable in [`src/pricing.py`](src/pricing.py) — update them
-from [doubleword.ai/pricing](https://doubleword.ai/pricing) before quoting numbers.
+Batch cost is reported by `dw batches analytics` (authoritative, always current).
+See [doubleword.ai/pricing](https://doubleword.ai/pricing) for live rates.
 
 ---
 
 ## Tests
 
 ```bash
-uv run pytest        # offline: JSONL shape, judge prompt, Score model, parsing, pricing
+uv run pytest        # offline: JSONL shape, judge prompt, Score model, result parsing
 ```
 
 The suite is hermetic — no network, no Phoenix, no API key required.
@@ -197,7 +203,6 @@ src/
   config.py          env → validated settings
   judge.py           the judge: one prompt + a typed Score
   data.py            TruthfulQA load, batch JSONL emit, result parsing
-  pricing.py         realtime-vs-batch cost math
   phoenix_io.py      Doubleword-batch ↔ Phoenix Dataset/Experiment bridge
   cli.py             prepare / prepare-judge / analyze
 tests/               offline unit tests

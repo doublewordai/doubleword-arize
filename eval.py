@@ -11,7 +11,7 @@ What it does, end to end, in one process:
   2. *generate* answers as one Doubleword batch,
   3. *judge* every answer as a second Doubleword batch (the expensive part),
   4. push the eval set + scores to Phoenix as a Dataset + Experiment,
-  5. print what batch saved you vs realtime.
+  5. report token usage (authoritative batch cost: `dw batches analytics`).
 
 autobatcher.BatchOpenAI collects every `chat.completions.create` call inside the
 `async with` block and submits them as a single batch job — no manual file
@@ -27,7 +27,7 @@ import asyncio
 from autobatcher import BatchOpenAI
 from wasabi import msg
 
-from src import data, pricing
+from src import data
 from src.cli import DATASET_DISPLAY_NAME
 from src.config import settings
 from src.judge import Score, build_judge_messages
@@ -117,18 +117,15 @@ async def main(limit: int | None) -> None:
     )
     msg.good(f"Phoenix Dataset + Experiment → {settings.phoenix_collector_endpoint}")
 
-    # Savings.
-    gen = pricing.savings(gen_in, gen_out, settings.model_chat)
-    jud = pricing.savings(judge_in, judge_out, settings.model_judge)
-    total_rt, total_bt = gen["realtime"] + jud["realtime"], gen["batch"] + jud["batch"]
-    saved = total_rt - total_bt
-    pct = (saved / total_rt * 100) if total_rt else 0
+    # Token usage. Authoritative batch cost comes from `dw batches analytics`
+    # (file-first workflow). Batch runs on Doubleword's high-throughput backend.
     overall = sum(s.overall for s in scores.values()) / len(scores) if scores else 0.0
     msg.text(f"\nMean quality (overall): {overall:.3f} over {len(scores)} answers")
     msg.text(
-        f"Cost: batch ${total_bt:.4f} vs realtime ${total_rt:.4f} "
-        f"— saved ${saved:.4f} ({pct:.0f}%)"
+        f"Tokens — generation: {gen_in:,} in / {gen_out:,} out · "
+        f"judge: {judge_in:,} in / {judge_out:,} out"
     )
+    msg.text("Cost: batch runs on Doubleword's high-throughput backend — see doubleword.ai/pricing.")
     print(
         "\nThat's it. You've just built a scalable, cost-managed, "
         "rate-limit-proof eval pipeline."

@@ -13,7 +13,7 @@ workflow = [
     "dw files prepare batches/judge.jsonl --model deepseek-ai/DeepSeek-V4-Pro",
     "dw batches run batches/judge.jsonl --watch --output-id .judge-id",
     "dw batches results --from-file .judge-id -o results/scores.jsonl",
-    # Stage 3 — score, record the Phoenix Experiment, print savings.
+    # Stage 3 — score, record the Phoenix Experiment, report token usage + cost.
     "dw project run analyze -- -a results/answers.jsonl -s results/scores.jsonl",
     "dw batches analytics --from-file .gen-id",
     "dw batches analytics --from-file .judge-id",
@@ -28,5 +28,5 @@ description = "Turn generated answers into the judge batch"
 run = "uv run doubleword-arize prepare-judge"
 
 [steps.analyze]
-description = "Score judge results, log a Phoenix Experiment, print the savings"
+description = "Score judge results, log a Phoenix Experiment, report token usage"
 run = "uv run doubleword-arize analyze"

@@ -4,7 +4,7 @@ Three steps, designed to slot into the `dw` workflow (see dw.toml):
 
   prepare        download TruthfulQA, emit the generation batch, upload the Phoenix Dataset
   prepare-judge  turn generated answers into the judge batch
-  analyze        score the judge results, record a Phoenix Experiment, print savings
+  analyze        score the judge results, record a Phoenix Experiment, report token usage
 
 Batch submission / polling / retrieval is the `dw` CLI's job, not ours.
 """
@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 from wasabi import msg
 
-from . import data, pricing
+from . import data
 from .config import settings
 from .judge import Score
 
@@ -109,7 +109,7 @@ def analyze(
     dataset_name: str,
     no_phoenix: bool,
 ) -> None:
-    """Score judge results, log a Phoenix Experiment, and print the savings."""
+    """Score judge results, log a Phoenix Experiment, and report token usage."""
     answer_results = data.index_by_custom_id(data.read_jsonl(answers))
     score_results = data.index_by_custom_id(data.read_jsonl(scores))
 
@@ -143,10 +143,6 @@ def analyze(
         "tokens": {
             "generation": {"input": gen_in, "output": gen_out},
             "judge": {"input": judge_in, "output": judge_out},
-        },
-        "savings": {
-            "generation": pricing.savings(gen_in, gen_out, settings.model_chat),
-            "judge": pricing.savings(judge_in, judge_out, settings.model_judge),
         },
     }
 
@@ -209,22 +205,15 @@ def _print_report(summary: dict) -> None:
     click.echo(f"Tone:          {m['tone']:.3f}")
     click.echo(f"Overall:       {m['overall']:.3f}")
 
-    click.echo("\nCost (generation + judge, this run):")
-    total_rt = total_bt = 0.0
-    for label, sv in summary["savings"].items():
-        click.echo(
-            f"  {label:<11} batch ${sv['batch']:.4f}  vs realtime ${sv['realtime']:.4f}"
-            f"  (saved {sv['saved_pct']:.0f}%)"
-        )
-        total_rt += sv["realtime"]
-        total_bt += sv["batch"]
-    saved = total_rt - total_bt
-    pct = (saved / total_rt * 100) if total_rt else 0
+    t = summary["tokens"]
+    click.echo("\nToken usage (this run):")
+    click.echo(f"  generation  {t['generation']['input']:,} in / {t['generation']['output']:,} out")
+    click.echo(f"  judge       {t['judge']['input']:,} in / {t['judge']['output']:,} out")
     click.echo(
-        f"  {'TOTAL':<11} batch ${total_bt:.4f}  vs realtime ${total_rt:.4f}"
-        f"  (saved ${saved:.4f}, {pct:.0f}%)"
+        "\nCost: run `dw batches analytics --from-file <id>` for the authoritative"
+        " per-batch cost."
     )
-    click.echo("\n(Authoritative per-batch cost: `dw batches analytics`.)")
+    click.echo("Batch runs on Doubleword's high-throughput backend — see doubleword.ai/pricing.")
 
 
 def main() -> None:
