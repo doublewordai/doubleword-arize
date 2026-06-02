@@ -1,185 +1,204 @@
-# Trace and Untangle Agentic Workflows for Less
+# Cheap, Observable LLM-as-Judge Evals — Doubleword Batch × Arize Phoenix
 
-AI agents can quickly become complex and expensive. Developing and running agents in production is challenging, given the number of changing states and failure modes they present. Agentic workloads make many calls per request, so running evals at realtime prices doesn't scale. 
+LLM-as-judge is the standard way to measure answer quality at scale — and it's
+expensive, because you run a strong model over *every* output. The trick is that
+evaluation is a **background** workload: you're measuring, not serving, so you
+don't need realtime latency. That's exactly what batch inference is for.
 
-This project shows how AI agents can be traced end-to-end, cost effectively using the [Doubleword inference API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference) with [Arize Phoenix](https://arize.com/phoenix), an observability and evaluation layer. 
-
-In the workbook, we show a simple but reproducable implementation of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evals at a fraction of the cost of realtime usage.
-
-> Doubleword exposes the same models across three tiers — **realtime**, **async**, and **batch** — under one API key. See **[doubleword.ai/pricing](https://doubleword.ai/pricing/)** for the live cost breakdown.
+This project takes a heavy eval workload — **generate answers to all 817
+[TruthfulQA](https://huggingface.co/datasets/truthfulqa/truthful_qa) questions,
+then judge every one of them** — runs both halves on
+[Doubleword's batch tier](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference),
+and lands the results in [Arize Phoenix](https://arize.com/phoenix) as a
+first-class **Dataset + Experiment** you can browse, filter, and compare.
 
 <p align="center">
-  <img src="images/demo-hero.png" height="auto" width="auto" alt="Doubleword" />
+  <img src="images/demo-hero.png" height="auto" width="auto" alt="Doubleword × Arize Phoenix" />
 </p>
 
-### Why this matters
+> One Doubleword API key covers realtime, async, and batch. Batch is ~50% off
+> realtime — see **[doubleword.ai/pricing](https://doubleword.ai/pricing/)**.
 
-Agents can run reasoning and planning steps, retrieve data, call tool calls, and even spin up other agents. These complex flows have steps each with its own latency, model, and diverse failure modes. 
+## Why this matters
 
-Observing their state is one thing, but actively guarding quality of their outputs is another. Debugging often means re-running the whole agent, adding logging, and guessing. With span-level tracing you see, per request, whether the model decided to search, what it retrieved, how long each step took, and where the answer degraded. 
+Running an LLM judge at realtime prices doesn't scale: an agentic app makes many
+calls per request, and judging each one at full price turns quality monitoring
+into a line item nobody wants to pay. So teams sample a handful of outputs, eyeball
+them, and hope.
 
-Input/output logging doesn't capture this but span-level tracing does. You can see exactly which step caused a regression. 
+Batch changes the math. Because evaluation tolerates latency, you move it off the
+hot path: enqueue the whole workload, let Doubleword's high-throughput backend
+chew through it, and pay roughly half. Suddenly judging *every* output — not a 1%
+sample — is affordable.
 
-The other half is cost. 
+The missing half is **observability**. A cheap score you can't see isn't useful.
+So we push the eval set and every judge score into Phoenix as a Dataset +
+Experiment: per-example inputs, generated answers, and four scores (relevance,
+truthfulness, tone, overall), with run-to-run comparison built in.
 
-This project defaults to DeepSeek V4 Pro as both the chat model and the LLM-as-judge. Running a top-tier model as judge is a great way to save while maintaining high quality outputs in production.
+The result: comprehensive, observable evals at a fraction of realtime cost.
+
+## How it works
+
+Two batches, one dataset, one experiment:
+
+```
+TruthfulQA (817 q)
+   │
+   ├─▶ Batch 1: GENERATE answers           (Doubleword batch)
+   │
+   ├─▶ Batch 2: JUDGE each answer          (Doubleword batch — the expensive part)
+   │            relevance · truthfulness · tone
+   │
+   └─▶ Arize Phoenix
+         Dataset:    the 817 questions + reference answers
+         Experiment: generated answer + 4 judge scores per example
+```
+
+The judge is a single prompt returning a typed score — see
+[`src/judge.py`](src/judge.py). Everything else is plumbing: load the data,
+emit OpenAI-format batch JSONL, submit it via the `dw` CLI, and record the
+results in Phoenix. There is **no agent and no retrieval** — just the eval
+workload and the integration, which is the whole point.
+
+### The Phoenix bridge
+
+The expensive work happens out-of-process on the batch tier. By the time results
+return, every answer and score is already computed — so the Phoenix Experiment's
+`task` and `evaluators` are pure lookups (no live LLM calls). See
+[`src/phoenix_io.py`](src/phoenix_io.py). Phoenix still renders per-example
+outputs, all four scores, and lets you compare experiments across models or
+prompts.
 
 ---
 
-## Tutorial
+## Quick start
 
-### 1. Get a Doubleword API key
+### 1. Prerequisites
 
-1. Sign in at [app.doubleword.ai](https://app.doubleword.ai/).
-2. Open the **API Keys** page in the dashboard.
-3. Create a key and copy it. The same key covers realtime, async, and batch.
+- A **Doubleword API key** — sign in at [app.doubleword.ai](https://app.doubleword.ai/).
+- The **[`dw` CLI](https://github.com/doublewordai/dw)**:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/doublewordai/dw/main/install.sh | sh
+  dw login --api-key dw-...
+  ```
+- **[uv](https://docs.astral.sh/uv/)** and **[Docker](https://www.docker.com/get-started/)**.
 
 ### 2. Configure
 
-This project uses the [uv](https://docs.astral.sh/uv/) package manager. Copy the example env file and paste your key:
-
 ```bash
-# macOS / Linux
-cp .env.example .env
-
-# Windows PowerShell
-Copy-Item .env.example .env
-```
-
-Open `.env` and replace the `DOUBLEWORD_API_KEY=dw-...` placeholder with your key. Every other setting (model names, project name, Phoenix endpoint, concurrency, batch SLA) has a working default in [`src/dwp/config.py`](src/dwp/config.py) — only override what you need in `.env`; `.env` wins.
-
-### 3. Start Phoenix
-
-```bash
-docker compose -f docker-compose.yaml up -d
-# Phoenix UI at http://localhost:6006
-#
-# Phoenix-only (no Postgres), for an existing stack:
-# docker compose -f compose.phoenix-only.yaml up -d
-```
-
-Requires [Docker](https://www.docker.com/get-started/). The UI opens on the empty `default` project — that's expected. The agent writes to its own project (`doubleword-arize`), auto-created on the first run below. 
-
-### 4. Install
-
-```bash
+cp .env.example .env     # then paste your DOUBLEWORD_API_KEY
 uv sync --extra dev
 ```
 
-### 5. Run the agent (realtime)
+Every other setting has a working default in [`src/config.py`](src/config.py).
+
+### 3. Start Phoenix (local, Docker)
 
 ```bash
-uv run python examples/run_agent.py "what is OpenInference?"
+docker compose up -d
+# Phoenix UI at http://localhost:6006
 ```
 
-**What you should see:** the script prints an answer, then `Trace sent to Phoenix`. Open [http://localhost:6006/projects](http://localhost:6006/projects), click into **doubleword-arize**, and you'll see one trace:
+A local Phoenix is the only standing dependency — fair, since visualising the
+results in Arize is the point of the integration.
 
-```
-agent.run
-├─ planning      (LLM: ChatCompletion)
-├─ searching     (optional, only if planner decides)
-└─ answering     (LLM: ChatCompletion)
-```
+### 4. Run the pipeline with the `dw` CLI
 
-### 6. Fan out concurrent traces
+The full workflow lives in [`dw.toml`](dw.toml). Run it end-to-end:
 
 ```bash
-uv run python examples/run_concurrent.py
+dw project run-all
 ```
 
-Five queries run in parallel via `asyncio.gather`. In the Phoenix timeline you'll see five overlapping root traces — the async-first design in practice.
-
-### 7. Try the cheaper tiers
-
-`MODE` controls which Doubleword tier `examples/run_agent.py` and `examples/run_concurrent.py` use:
+…or step through it for control. Generate answers (one batch):
 
 ```bash
-MODE=async uv run python examples/run_concurrent.py   # cheaper, high-throughput
-MODE=batch uv run python examples/run_concurrent.py   # cheapest, up to 24h
+dw project run prepare -- -n 817                         # TruthfulQA → generate.jsonl + Phoenix Dataset
+dw files prepare batches/generate.jsonl --model deepseek-ai/DeepSeek-V4-Pro
+dw batches run batches/generate.jsonl --watch --output-id .gen-id
+dw batches results --from-file .gen-id -o results/answers.jsonl
 ```
 
-The agent code is identical across all three modes; only [`src/dwp/clients.py`](src/dwp/clients.py) `build_chat_client(mode=...)` changes which OpenAI-shaped client is returned.
-
-### 8. Score outputs with LLM-as-judge evals
-
-After steps 5–7 have produced traces:
+Judge every answer (the expensive batch):
 
 ```bash
-uv run python examples/run_async_evals.py     # cheaper, high-throughput
-uv run python examples/run_batch_evals.py     # cheapest, up to 24h
+dw project run prepare-judge -- -a results/answers.jsonl  # answers → judge.jsonl
+dw files prepare batches/judge.jsonl --model deepseek-ai/DeepSeek-V4-Pro
+dw batches run batches/judge.jsonl --watch --output-id .judge-id
+dw batches results --from-file .judge-id -o results/scores.jsonl
 ```
 
-These read `answering` spans from Phoenix, score them with the judge in [`src/dwp/evals/judges.py`](src/dwp/evals/judges.py), and write the results back as `quality` / `quality_batch` annotations on the original spans. Filter by `eval.quality.label == 'low_relevance'` in Phoenix to find outputs worth reviewing.
+Score, record the Phoenix Experiment, and see the savings:
+
+```bash
+dw project run analyze -- -a results/answers.jsonl -s results/scores.jsonl
+dw batches analytics --from-file .gen-id
+dw batches analytics --from-file .judge-id
+```
+
+Open [http://localhost:6006](http://localhost:6006) → **Datasets → truthfulqa-eval
+→ Experiments** to browse per-example answers and scores.
+
+> **On the 24h window:** `BATCH_COMPLETION_WINDOW` is a *maximum* SLA, not an
+> expected wait. Batches routinely finish in minutes; the long ceiling just lets
+> the shared queue guarantee a worst case across tenants. Use `1h` for a faster
+> smoke test.
+
+### 5. Or run it all in one script
+
+If you'd rather not orchestrate the CLI, [`eval.py`](eval.py) does the whole loop
+in-process (both batches via `autobatcher.BatchOpenAI`, then the Phoenix
+Dataset + Experiment):
+
+```bash
+uv run python eval.py -n 50      # quick run
+uv run python eval.py            # full 817
+```
+
+Save this as `eval.py`, export your API keys, and run it. You've just built a
+scalable, cost-managed, rate-limit-proof eval pipeline.
 
 ---
 
-## Use it in your own app
+## Results
 
-Two additions, no architecture changes — see [docs/guides/existing-app.md](docs/guides/existing-app.md). The short version:
+> _Populated from a full 817-question run. Re-run `dw project run analyze` and
+> `dw batches analytics` to refresh. `dw batches analytics` is the authoritative
+> cost source; the table below is the at-a-glance realtime-vs-batch comparison._
 
-```python
-# 1. Bootstrap Phoenix tracing once at startup
-from phoenix.otel import register
-register(project_name="my-app", auto_instrument=True, batch=True)
+| Stage | Requests | Input tokens | Output tokens | Batch cost | Realtime cost | Saved |
+|-------|---------:|-------------:|--------------:|-----------:|--------------:|------:|
+| Generate | 817 | _tbd_ | _tbd_ | _tbd_ | _tbd_ | _tbd_ |
+| Judge | 817 | _tbd_ | _tbd_ | _tbd_ | _tbd_ | _tbd_ |
+| **Total** | **1,634** | _tbd_ | _tbd_ | **_tbd_** | **_tbd_** | **~50%** |
 
-# 2. Point the OpenAI SDK at Doubleword (drop-in)
-from openai import AsyncOpenAI
-client = AsyncOpenAI(api_key="<DOUBLEWORD_API_KEY>", base_url="https://api.doubleword.ai/v1")
-```
+Mean judge scores (0–1): relevance _tbd_ · truthfulness _tbd_ · tone _tbd_.
 
-For the cheaper tiers, swap the import — same call shape:
-
-```python
-from autobatcher import AsyncOpenAI   # cheaper, high-throughput
-from autobatcher import BatchOpenAI   # cheapest, up to 24h
-```
-
-The autobatcher clients are async context managers — use `async with` so queued requests flush on exit. See [docs/guides/async-evals.md](docs/guides/async-evals.md) for the eval-loop pattern.
-
----
-
-## Guides
-
-- [Build a new async agent](docs/guides/new-async-agent.md) — span-first design from scratch
-- [Add observability to an existing app](docs/guides/existing-app.md) — two additions, no architecture changes
-- [Async and batch evals](docs/guides/async-evals.md) — LLM-as-judge off the hot path
+Cost rates are configurable in [`src/pricing.py`](src/pricing.py) — update them
+from [doubleword.ai/pricing](https://doubleword.ai/pricing) before quoting numbers.
 
 ---
 
 ## Tests
 
 ```bash
-uv run pytest                             # 41 mocked tests, no network
-RUN_INTEGRATION=1 uv run pytest -m integration   # 3 real-API tests (one per mode)
+uv run pytest        # offline: JSONL shape, judge prompt, Score model, parsing, pricing
 ```
 
-The default suite has no external dependencies. The opt-in integration suite hits the real Doubleword API once per mode (realtime / async / batch) and asserts a non-empty completion.
-
----
-
-## Troubleshooting
-
-- **Phoenix won't start.** Check `docker ps` — port `6006` (UI) and `4317` (OTLP) need to be free. `docker compose logs phoenix` shows startup errors.
-- **No spans in the UI.** Phoenix's landing page shows the empty `default` project. Navigate to **Projects → doubleword-arize**.
-- **`run_async_evals.py` says "No answering spans found".** Run step 5 or 6 first to produce `answering` spans, then re-run.
-- **Integration tests skipped.** They only run with `RUN_INTEGRATION=1` *and* a real `DOUBLEWORD_API_KEY` in `.env`.
-
----
+The suite is hermetic — no network, no Phoenix, no API key required.
 
 ## Project layout
 
 ```
-src/dwp/
-  config.py          env → validated settings; defaults live here
-  tracing.py         one-line Phoenix bootstrap
-  clients.py         Doubleword client factory: realtime / async / batch
-  agent.py           span-first async agent (planning / searching / answering)
-  corpus.py          in-memory retrieval (swap for your own)
-  evals/
-    judges.py        Score model + shared judge prompt
-    online.py        Async eval loop (autobatcher.AsyncOpenAI)
-    batch.py         Async off eval loop (autobatcher.BatchOpenAI)
-examples/            one entry-point per scenario
-tests/               mocked suite (default) + tests/integration/ (opt-in)
-docs/guides/         how-to guides for each part of the stack
+eval.py              one-file pipeline (both batches → Phoenix)
+dw.toml              dw CLI workflow (prepare → run → results → analyze)
+src/
+  config.py          env → validated settings
+  judge.py           the judge: one prompt + a typed Score
+  data.py            TruthfulQA load, batch JSONL emit, result parsing
+  pricing.py         realtime-vs-batch cost math
+  phoenix_io.py      Doubleword-batch ↔ Phoenix Dataset/Experiment bridge
+  cli.py             prepare / prepare-judge / analyze
+tests/               offline unit tests
 ```

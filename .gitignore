@@ -18,7 +18,11 @@ build/
 .idea/
 .vscode/
 
-# scratch outputs from the batch example
+# scratch outputs from the batch pipeline
+batches/
+results/
+.gen-id
+.judge-id
 .batch-runs/
 
 /planning
