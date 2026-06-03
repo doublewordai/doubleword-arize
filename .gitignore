@@ -26,3 +26,4 @@ results/
 .batch-runs/
 
 /planning
+.DS_Store
