@@ -6,7 +6,7 @@ Evaluation is the only way to keep agentic workflows from regressing, but runnin
 
 By routing your Arize evaluation workloads through Doubleword's [batch API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference), you can run top-tier models (like [DeepSeek V4 Pro, Qwen-3.6 and others](https://docs.doubleword.ai/inference-api/models)) as your judge for 4-6x less than real-time API costs, with zero rate-limit throttling. 
 
-- Tracing - track every generation and judgement as a trace. Break down complex agents and llm calls into individual steps with 'spans' (individual steps such as generating text, fetching data, and using tools like web_search or send_sms that agents use to interact with information and perform actions). 
+- Tracing - track every generation and judgement as a trace. Break down complex agents and llm calls into individual steps with 'spans' (individual steps such as generating text, fetching data, and using tools like web_search or send_sms that agents use to access information and perform actions). 
 
 - Evaluations - evaluate llm outputs against graded references to maintain quality, reliability and consistency. These are often referred to as 'evals'. 
 
@@ -41,7 +41,7 @@ To make Doubleword a first-class citizen in your workspace, add it to your provi
 
 1. In Arize, navigate to Settings > AI Providers.
 2. Select the Custom Providers tab.
-3. Add Doubleword and paste your API key. (Because Doubleword is OpenAI-compatible, you can map the Base URL to Doubleword's endpoint).
+3. Add Doubleword and paste your API key. (Because Doubleword is OpenAI-compatible, you can map the Base URL to Doubleword's endpoint `https://api.doubleword.ai/v1`).
     Note: We are currently working with Arize to become a default, one-click provider in this dropdown.
 
 ### Step 3: Select Your Project
@@ -135,7 +135,7 @@ Open your project in [Arize](https://app.arize.com/). On the Tracing Projects pa
 
 ### Step 3 — Judge the Answers
 
-The judge is aother batch call hand the model the question and the answer, ask for scores back
+The judge is another batch call that hands the model the question and the answer, asks for scores back
 as JSON. Reuse the same client so the judgements land in the same Arize project.
 
 ```python
