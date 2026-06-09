@@ -1,10 +1,10 @@
-# How to Run LLM-as-Judge Evals at Scale with Arize and Doubleword
+# Continuous LLM-as-Judge Evals at Scale with Arize and Doubleword
+
+As agentic workflows grow more complex - spawning subagents, routing between steps, and chaining tool calls - the number of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evaluations needed to grade a single trace grows quickly. Evaluation is the only way to keep those workflows from regressing, but running a frontier judge synchronously on thousands of production traces is an operational bottleneck: you tie up application code, hit aggressive rate limits, and pay premium real-time inference prices for a background task.
 
 Our goal with this guide is to show you how to connect [Doubleword](https://doubleword.ai) and [Arize](https://arize.com) for high throughput yet inexpensive inference and evaluations at scale.
 
-Evaluation is the only way to keep agentic workflows from regressing, but running a frontier model for [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) synchronously on thousands of production traces is an operational bottleneck. You tie up application code, hit aggressive rate limits, and pay premium real-time inference prices for a background task.
-
-By routing your Arize evaluation workloads through Doubleword's [batch API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference), you can run top-tier models (like [DeepSeek V4 Pro, Qwen-3.6 and others](https://docs.doubleword.ai/inference-api/models)) as your judge for 4-6x less than real-time API costs, with zero rate-limit throttling. 
+By routing your Arize evaluation workloads through Doubleword's [batch API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference), you can run top-tier models (like [DeepSeek V4 Pro, Qwen-3.6 and others](https://docs.doubleword.ai/inference-api/models)) as your judge for 4-6x less than real-time API costs, with zero rate-limit throttling.
 
 - Tracing - track every generation and judgement as a trace. Break down complex agents and llm calls into individual steps with 'spans' (individual steps such as generating text, fetching data, and using tools like web_search or send_sms that agents use to access information and perform actions). 
 
@@ -16,8 +16,8 @@ By routing your Arize evaluation workloads through Doubleword's [batch API](http
 
 ## Quickstart
 
-- A Doubleword API key — sign up at [app.doubleword.ai](https://app.doubleword.ai/) and generate a key on the API Keys page. 
-- An Arize account — sign up at [Arize AX](https://app.arize.com). 
+- A Doubleword API key - sign up at [app.doubleword.ai](https://app.doubleword.ai/) and generate a key on the API Keys page. 
+- An Arize account - sign up at [Arize AX](https://app.arize.com). 
 - Python 3.11+. 
 
 If you are using a coding agent to set up Arize and Doubleword, you can use the setup prompts to help you get started faster:
@@ -60,9 +60,9 @@ To make Doubleword a first-class citizen in your workspace, add it to your provi
 | Integration Name | `Doubleword` (or any name you like) |
 | API Format | `OpenAI` |
 | API Key | Your Doubleword API key (e.g. `sk-...`) |
-| API Base URL | `https://api.doubleword.ai/v1` — include `/v1`; do **not** add `/chat/completions` |
+| API Base URL | `https://api.doubleword.ai/v1` - include `/v1`; do **not** add `/chat/completions` |
 | Extra Headers | Leave empty |
-| OpenAI default models | **Off** — we're not using standard OpenAI models (though GPT-OSS models are available from doubleword) |
+| OpenAI default models | **Off** - we're not using standard OpenAI models (though GPT-OSS models are available from doubleword) |
 | Custom Models → Model name | Your Doubleword model(s), e.g. `deepseek-ai/DeepSeek-V4-Pro` (see the [model catalog](https://docs.doubleword.ai/inference-api/model-pricing)) |
 
 4. (Optional) Under **Advanced Settings**, turn on *Supports function calling* if your models use tools. Set the **Authorized Org / Space** to your workspace, click **Test Integration**, then save.
@@ -77,11 +77,11 @@ To make Doubleword a first-class citizen in your workspace, add it to your provi
 
 ### Step 3: Select Your Project
 
-In the Arize sidebar, go to **Observe → Tracing Projects**. Pick a name for this run's project — it appears here automatically the first time you send traces (Step 1 sets it via `project_name`), or you can create one up front. This is where your LLM-as-a-judge traces and scores will live.
+In the Arize sidebar, go to **Observe → Tracing Projects**. Pick a name for this run's project - it appears here automatically the first time you send traces (Step 1 sets it via `project_name`), or you can create one up front. This is where your LLM-as-a-judge traces and scores will live.
 
 ### Step 4: Get your Space ID and API key
 
-Tracing is wired up in code (next section), and it needs two values from Arize. Open **Settings** and copy your **Space ID** and **API key** — you'll drop them into the setup below (or your `.env`).
+Tracing is wired up in code (next section), and it needs two values from Arize. Open **Settings** and copy your **Space ID** and **API key** - you'll drop them into the setup below (or your `.env`).
 
 ![Getting your Space ID and API key in Arize AX settings](images/steps/07-arize-space-id-and-api-key.png)
 
@@ -96,9 +96,9 @@ Add the Arize AX tracing helper:
 pip install arize-otel
 ```
 
-### Step 1 — Connect Arize
+### Step 1 - Connect Arize
 
-**Arize AX** — copy your Space ID and API key from Settings in the Arize app:
+**Arize AX** - copy your Space ID and API key from Settings in the Arize app:
 
 ```python
 from arize.otel import register
@@ -112,7 +112,9 @@ tracer_provider = register(
 OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
 ```
 
-That's the entire Arize setup. Everything below is traced automatically.
+Arize now traces every call below automatically.
+
+> Tip: on slow or large batches, set `OTEL_EXPORTER_OTLP_TRACES_TIMEOUT=30000` (ms) so the root spans reliably reach Arize. It's in `.env.example`.
 
 ### Step 2 - Generate answers on Doubleword batch
 
@@ -155,7 +157,7 @@ answers = asyncio.run(main())
 
 Open your project in [Arize](https://app.arize.com/). On the Tracing Projects page, each call is there as a span with its prompt, output, and token counts. 
 
-### Step 3 — Judge the Answers
+### Step 3 - Judge the Answers
 
 The judge is another batch call that hands the model the question and the answer, asks for scores back
 as JSON. Reuse the same client so the judgements land in the same Arize project.
@@ -191,9 +193,9 @@ async def main():
     return scores
 ```
 
-### Step 4 — Send the scores to Arize as evaluations
+### Step 4 - Send the scores to Arize as evaluations
 
-So far the judge scores only live in the trace as text. To turn them into structured **evaluations** — sortable, filterable columns and metrics on each span — log them back to Arize, keyed by span ID. Wrap each item in a span so you can grab its ID, then push the scores with the Arize SDK.
+So far the judge scores only live in the trace as text. To turn them into structured **evaluations** - sortable, filterable columns and metrics on each span - log them back to Arize, keyed by span ID. Wrap each item in a span so you can grab its ID, then push the scores with the Arize SDK.
 
 ```bash
 pip install arize
@@ -202,6 +204,7 @@ pip install arize
 ```python
 import asyncio
 import os
+import time
 import pandas as pd
 from opentelemetry import trace
 from arize import ArizeClient
@@ -230,29 +233,35 @@ async def main():
 
 results = asyncio.run(main())
 
-# One row per span: eval.<name>.score and .label
+# One row per span. .get() guards against malformed judge output (no KeyError).
 rows = []
 for span_id, s in results:
     row = {"context.span_id": span_id}
     for name in ("relevance", "truthfulness", "tone"):
-        row[f"eval.{name}.score"] = float(s[name])
-        row[f"eval.{name}.label"] = "pass" if float(s[name]) >= 0.7 else "fail"
+        val = float(s.get(name, 0))
+        row[f"eval.{name}.score"] = val
+        row[f"eval.{name}.label"] = "pass" if val >= 0.7 else "fail"
     rows.append(row)
 
+# Evals attach by span ID, so the spans must be ingested first. Spans export on a
+# short delay (longer if a batch was slow), so poll-and-retry instead of one sleep.
 client = ArizeClient(api_key=os.environ["ARIZE_API_KEY"])
-try:
-    client.spans.update_evaluations(
-        space_id=os.environ["ARIZE_SPACE_ID"],
-        project_name="llm-judge-evals",
-        dataframe=pd.DataFrame(rows),
-    )
-except Exception as e:
-    # Evals attach by span ID, so the spans must be ingested first. If a batch was
-    # slow, wait ~30s and re-run this block; also check ARIZE_SPACE_ID / ARIZE_API_KEY.
-    print(f"Eval upload failed ({e}). Wait ~30s and re-run this block.")
+for attempt in range(1, 7):  # up to ~60s total
+    time.sleep(10)
+    try:
+        client.spans.update_evaluations(
+            space_id=os.environ["ARIZE_SPACE_ID"],
+            project_name="llm-judge-evals",
+            dataframe=pd.DataFrame(rows),
+        )
+        break
+    except Exception as e:
+        print(f"Eval upload attempt {attempt}/6 failed ({e}); spans may still be landing, retrying...")
+else:
+    print("Gave up after retries. Wait ~30s and re-run; check ARIZE_SPACE_ID / ARIZE_API_KEY.")
 ```
 
-Refresh your project in Arize — every span now carries relevance, truthfulness, and tone scores you can sort, filter, and chart. You keep batch pricing for the judging and still get first-class evals.
+Refresh your project in Arize - every span now carries relevance, truthfulness, and tone scores you can sort, filter, and chart. You keep batch pricing for the judging and still get first-class evals.
 
 ![LLM-as-judge evaluation results in Arize AX](images/steps/09-arize-doubleword-eval-results-1.png)
 
@@ -262,27 +271,19 @@ Refresh your project in Arize — every span now carries relevance, truthfulness
 
 > Tip: spans need a few seconds to land in Arize before evals can attach. If a batch was slow, give it a moment (or re-run this last block) so the scores match up.
 
-## Limitations
+## How Arize and Doubleword work together
 
-### Cost tracking 
-Arize shows token counts per call for batch traffic out of the box. Cost in dollars
-is a little different:
+### Telemetry and cost
+Arize is your source of truth for traces, spans, and eval scores, and it shows token counts per call out of the box. For the actual batch spend, use Doubleword - the [app.doubleword.ai](https://app.doubleword.ai/batches) console lists in-flight, current, and completed batches with their total cost, and the `dw` CLI gives the same via `dw batches analytics`.
 
-- For cost observability per batch, use Doubleword. The [app.doubleword.ai](https://app.doubleword.ai/batches) shows
-  in-flight, current, and completed batches with the total cost, and the `dw` CLI gives the same via
-  `dw batches analytics`.
-
-Arize offers fantastic telemetry for traces, tokens, and scores. Doubleword dashboard and cli are a great source of truth for the actual batch spend. 
-
-### Order of Operations
-
-- Most Doubleword batches often come back very fast. A batch might 90%+ might be complete after 10-15 mins but the remainder could take longer to complete. 
-- To ensure you grade all of the items in a batch, wait for the generation batch to complete before grading.
+### Order of operations
+- Most Doubleword batches come back very fast. A batch might be 90%+ complete after 10-15 mins, but the remainder could take longer to complete.
+- To grade every item in a batch, wait for the generation batch to complete before grading.
 
 ## Going further
 
-- **Full worked example** — the async-evals workbook runs generate-then-judge over a dataset of 817 items from the [TruthfulQA](https://huggingface.co/datasets/truthfulqa/truthful_qa) dataset as an evaluation experiment with LLM-as-a-judge for $0.50 total. 
-- **autobatcher** — the batch client used here, also available for TypeScript:
+- **Full worked example** - the async-evals workbook runs generate-then-judge over a dataset of 817 items from the [TruthfulQA](https://huggingface.co/datasets/truthfulqa/truthful_qa) dataset as an evaluation experiment with LLM-as-a-judge for $0.50 total. 
+- **autobatcher** - the batch client used here, also available for TypeScript:
   [github - autobatcher](https://github.com/doublewordai/autobatcher).
-- **Arize AX** — [docs](https://arize.com/docs/ax).
+- **Arize AX** - [docs](https://arize.com/docs/ax).
 - **Prefer open-source?** [Integrate Doubleword with Arize Phoenix](./arize-phoenix.md).

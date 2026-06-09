@@ -25,8 +25,15 @@ from arize.otel import register
 from openinference.instrumentation.openai import OpenAIInstrumentor
 from opentelemetry import trace
 
-SPACE_ID = os.environ["ARIZE_SPACE_ID"]
-ARIZE_KEY = os.environ["ARIZE_API_KEY"]
+def _require(name, hint=""):
+    val = os.environ.get(name)
+    if not val:
+        raise RuntimeError(f"{name} is not set in your .env. {hint}".strip())
+    return val
+
+
+SPACE_ID = _require("ARIZE_SPACE_ID", "Get it from Arize → Settings → Space ID.")
+ARIZE_KEY = _require("ARIZE_API_KEY", "Get it from Arize → Settings → API key.")
 PROJECT = os.environ.get("ARIZE_PROJECT_NAME", "doubleword-arize")
 
 tracer_provider = register(space_id=SPACE_ID, api_key=ARIZE_KEY, project_name=PROJECT)
@@ -35,7 +42,7 @@ tracer = trace.get_tracer("doubleword-evals")
 
 from autobatcher import BatchOpenAI
 
-DW_KEY = os.environ["DOUBLEWORD_API_KEY"]
+DW_KEY = _require("DOUBLEWORD_API_KEY", "Get it from app.doubleword.ai → API Keys.")
 DW_URL = os.environ.get("DOUBLEWORD_BASE_URL", "https://api.doubleword.ai/v1")
 MODEL = os.environ.get("MODEL_CHAT", "deepseek-ai/DeepSeek-V4-Pro")
 
@@ -71,7 +78,16 @@ async def run_item(client, q):
         )
         span.set_attribute("output.value", answer or "")
         span_id = format(span.get_span_context().span_id, "016x")
-    return span_id, json.loads(jr.choices[0].message.content)
+    # Validate the judge response before trusting it - don't silently record zeros.
+    try:
+        scores = json.loads(jr.choices[0].message.content or "")
+    except json.JSONDecodeError:
+        print(f"[warn] judge returned non-JSON for {q[:40]!r}; skipping its eval.")
+        return span_id, None
+    if not all(k in scores for k in ("relevance", "truthfulness", "tone")):
+        print(f"[warn] judge response missing score keys for {q[:40]!r}; skipping its eval.")
+        return span_id, None
+    return span_id, scores
 
 
 async def main():
@@ -89,14 +105,20 @@ if __name__ == "__main__":
 
     rows = []
     for span_id, s in results:
+        if s is None:  # judge response was invalid - nothing to attach
+            continue
         row = {"context.span_id": span_id}
         for name in ("relevance", "truthfulness", "tone"):
             val = float(s.get(name, 0))
             row[f"eval.{name}.score"] = val
             row[f"eval.{name}.label"] = "pass" if val >= 0.7 else "fail"
-            row[f"eval.{name}.explanation"] = f"LLM-as-judge {name} score (Doubleword batch)."
+            row[f"eval.{name}.explanation"] = f"{name} scored by {MODEL} via Doubleword batch."
         rows.append(row)
     evals_df = pd.DataFrame(rows)
+
+    if evals_df.empty:
+        print("[evals] no valid judge scores to log.")
+        raise SystemExit(0)
 
     # Evals attach by span ID, so the spans must be ingested first. Spans export on a
     # short delay (longer if a batch was slow), so poll-and-retry instead of guessing a

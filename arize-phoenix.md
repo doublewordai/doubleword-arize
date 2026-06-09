@@ -1,8 +1,8 @@
 # How to Run LLM-as-Judge Evals at Scale with Arize Phoenix and Doubleword
 
-Our goal with this guide is to show you how to connect [Doubleword](https://doubleword.ai) and [Arize Phoenix](https://phoenix.arize.com) - the open-source observability platform - for high throughput yet inexpensive inference and evaluations at scale.
+As agentic workflows grow more complex - spawning subagents, routing between steps, and chaining tool calls - the number of [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) evaluations needed to grade a single trace grows quickly. Evaluation is the only way to keep those workflows from regressing, but running a frontier judge synchronously on thousands of production traces is an operational bottleneck: you tie up application code, hit aggressive rate limits, and pay premium real-time inference prices for a background task.
 
-Evaluation is the only way to keep agentic workflows from regressing, but running a frontier model for [LLM-as-a-judge](https://doubleword.ai/glossary#llm-as-a-judge) synchronously on thousands of production traces is an operational bottleneck. You tie up application code, hit aggressive rate limits, and pay premium real-time inference prices for a background task.
+Our goal with this guide is to show you how to connect [Doubleword](https://doubleword.ai) and [Arize Phoenix](https://phoenix.arize.com) - the open-source observability platform - for high throughput yet inexpensive inference and evaluations at scale.
 
 By routing your Phoenix evaluation workloads through Doubleword's [batch API](https://docs.doubleword.ai/inference-api/intro-to-doubleword-inference), you can run top-tier models (like [DeepSeek V4 Pro, Qwen-3.6 and others](https://docs.doubleword.ai/inference-api/models)) as your judge for 4-6x less than real-time API costs, with zero rate-limit throttling.
 
@@ -86,7 +86,7 @@ os.environ["PHOENIX_API_KEY"] = "YOUR_PHOENIX_API_KEY"
 register(project_name="llm-judge-evals", auto_instrument=True)
 ```
 
-That's the entire Phoenix setup. Everything below is traced automatically.
+Phoenix now traces every call below automatically.
 
 ### Step 2 - Generate answers on Doubleword batch
 
@@ -162,20 +162,14 @@ async def main():
     return scores
 ```
 
-## Limitations
+## How Phoenix and Doubleword work together
 
-### Cost tracking
+### Telemetry and cost
+Phoenix is your source of truth for traces, spans, and eval scores, and it shows token counts per call out of the box. For the actual batch spend, use Doubleword - the [app.doubleword.ai](https://app.doubleword.ai/batches) console lists in-flight, current, and completed batches with their total cost, and the `dw` CLI gives the same via `dw batches analytics`.
 
-Phoenix shows token counts per call for batch traffic out of the box. Cost in dollars is a little different:
-
-- For cost observability per batch, use Doubleword. The [app.doubleword.ai](https://app.doubleword.ai/batches) shows in-flight, current, and completed batches with the total cost, and the `dw` CLI gives the same via `dw batches analytics`.
-
-Phoenix offers fantastic telemetry for traces, tokens, and scores. The Doubleword dashboard and CLI are a great source of truth for the actual batch spend.
-
-### Order of Operations
-
+### Order of operations
 - Most Doubleword batches come back very fast. A batch might be 90%+ complete after 10-15 mins, but the remainder could take longer.
-- To ensure you grade every item in a batch, wait for the generation batch to complete before grading.
+- To grade every item in a batch, wait for the generation batch to complete before grading.
 
 ## Going further
 
