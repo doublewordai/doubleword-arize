@@ -31,9 +31,11 @@ Use the documentation from https://doubleword.ai/llms.txt for help with the Doub
 
 ## Configuring Arize AX
 
-### Step 1: Log in to Arize SaaS
+### Step 1: Log in to Arize SaaS and Doubleword and Obtain API Keys
 
-If you don't have one already, create an account or log in to your [Arize workspace](https://app.arize.com). Do the same on the [Doubleword console](https://app.doubleword.ai/) and use the sidebar option 'API Keys' to generate a Doubleword API key.
+If you don't have one already, create an account or log in to your [Arize workspace](https://app.arize.com). 
+
+Do the same on the [Doubleword console](https://app.doubleword.ai/) and use the sidebar option 'API Keys' to generate a Doubleword API key.
 
 > Tip: Always keep API keys secure and never share them publicly.
 
@@ -41,10 +43,10 @@ If you don't have one already, create an account or log in to your [Arize worksp
 
 To make Doubleword a first-class citizen in your workspace, add it to your provider list so Arize can securely route evaluation prompts to our async endpoints.
 
-1. In Arize, navigate to Settings > AI Providers.
+1. In Arize, navigate to Settings > [AI Providers](https://app.arize.com/account/ai-providers). 
 2. Select the Custom Providers tab.
 3. Add Doubleword and paste your API key. (Because Doubleword is OpenAI-compatible, you can map the Base URL to Doubleword's endpoint `https://api.doubleword.ai/v1`).
-    Note: We are currently working with Arize to become a default, one-click provider in this dropdown.
+    Note: We are currently working with Arize to become a default, one-click provider in this dropdown. Choosing or adding custom providers requires admin privileges for your Arize AX workspace. 
 
 ### Step 3: Select Your Project
 
