@@ -59,6 +59,8 @@ To make Doubleword a first-class citizen in your workspace, add it to your provi
 
 4. (Optional) Under **Advanced Settings**, turn on *Supports function calling* if your models use tools. Set the **Authorized Org / Space** to your workspace, click **Test Integration**, then save.
 
+5. Once you have added your Doubleword API key and the model name, the 'Test Integration' button will check that you are all set to then 'Save Integration'. 
+
 > Note: We are currently working with Arize to become a default, one-click provider in this dropdown. Adding custom providers requires admin privileges for your Arize AX workspace.
 
 ### Step 3: Select Your Project
