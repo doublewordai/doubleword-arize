@@ -82,10 +82,7 @@ async def main():
 
 if __name__ == "__main__":
     results = asyncio.run(main())
-
     tracer_provider.force_flush()
-    print("[arize] spans flushed; waiting for ingestion before logging evals...")
-    time.sleep(25)
 
     import pandas as pd
     from arize import ArizeClient
@@ -99,10 +96,25 @@ if __name__ == "__main__":
             row[f"eval.{name}.label"] = "pass" if val >= 0.7 else "fail"
             row[f"eval.{name}.explanation"] = f"LLM-as-judge {name} score (Doubleword batch)."
         rows.append(row)
-
     evals_df = pd.DataFrame(rows)
-    resp = ArizeClient(api_key=ARIZE_KEY).spans.update_evaluations(
-        space_id=SPACE_ID, project_name=PROJECT, dataframe=evals_df
-    )
-    print(f"[evals] logged {len(evals_df)} span evaluations → {resp}")
+
+    # Evals attach by span ID, so the spans must be ingested first. Spans export on a
+    # short delay (longer if a batch was slow), so poll-and-retry instead of guessing a
+    # single sleep. Each attempt waits, then tries the upload; we stop on success.
+    client = ArizeClient(api_key=ARIZE_KEY)
+    for attempt in range(1, 7):  # up to ~60s total
+        time.sleep(10)
+        try:
+            resp = client.spans.update_evaluations(
+                space_id=SPACE_ID, project_name=PROJECT, dataframe=evals_df
+            )
+            print(f"[evals] logged {len(evals_df)} span evaluations → {resp}")
+            break
+        except Exception as e:
+            print(f"[evals] attempt {attempt}/6 failed ({e}); spans may still be landing, retrying...")
+    else:
+        print(
+            "[evals] gave up after retries. Wait ~30s and re-run; "
+            "and check ARIZE_SPACE_ID / ARIZE_API_KEY in your .env."
+        )
     print(f"[done] Arize AX → Observe → Tracing Projects → '{PROJECT}'")

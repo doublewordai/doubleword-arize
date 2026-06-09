@@ -200,10 +200,15 @@ pip install arize
 ```
 
 ```python
+import asyncio
 import os
 import pandas as pd
 from opentelemetry import trace
 from arize import ArizeClient
+from autobatcher import BatchOpenAI
+
+# Continues Steps 2 & 3: reuses `generate`, `judge`, and `questions` from above.
+# (For one complete, runnable file, see arize_eval.py in this repo.)
 
 tracer = trace.get_tracer("doubleword-evals")
 
@@ -234,11 +239,17 @@ for span_id, s in results:
         row[f"eval.{name}.label"] = "pass" if float(s[name]) >= 0.7 else "fail"
     rows.append(row)
 
-ArizeClient(api_key=os.environ["ARIZE_API_KEY"]).spans.update_evaluations(
-    space_id=os.environ["ARIZE_SPACE_ID"],
-    project_name="llm-judge-evals",
-    dataframe=pd.DataFrame(rows),
-)
+client = ArizeClient(api_key=os.environ["ARIZE_API_KEY"])
+try:
+    client.spans.update_evaluations(
+        space_id=os.environ["ARIZE_SPACE_ID"],
+        project_name="llm-judge-evals",
+        dataframe=pd.DataFrame(rows),
+    )
+except Exception as e:
+    # Evals attach by span ID, so the spans must be ingested first. If a batch was
+    # slow, wait ~30s and re-run this block; also check ARIZE_SPACE_ID / ARIZE_API_KEY.
+    print(f"Eval upload failed ({e}). Wait ~30s and re-run this block.")
 ```
 
 Refresh your project in Arize — every span now carries relevance, truthfulness, and tone scores you can sort, filter, and chart. You keep batch pricing for the judging and still get first-class evals.
