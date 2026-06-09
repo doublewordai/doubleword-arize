@@ -65,11 +65,11 @@ To make Doubleword a first-class citizen in your workspace, add it to your provi
 
 ### Step 3: Select Your Project
 
-Navigate to the Projects tab on Arize AX. Create a new project for this evaluation run, or select an existing project where you want your LLM-as-a-judge scores to live alongside your production data.
+In the Arize sidebar, go to **Observe → Tracing Projects**. Pick a name for this run's project — it appears here automatically the first time you send traces (Step 1 sets it via `project_name`), or you can create one up front. This is where your LLM-as-a-judge traces and scores will live.
 
-### Step 4: Add Tracing to the Project
+### Step 4: Get your Space ID and API key
 
-Ensure tracing is enabled for your project so that inputs, outputs, and the eventual evaluation scores can be mapped to individual spans. If you haven't instrumented your application yet, grab the Arize OpenTelemetry (OTel) endpoint configuration for your environment.
+Tracing is wired up in code (next section), and it needs two values from Arize. Open **Settings** and copy your **Space ID** and **API key** — you'll drop them into the setup below (or your `.env`).
 
 ## Running an Evaluation
 
@@ -175,7 +175,7 @@ async def main():
     return scores
 ```
 
-## Lmitations
+## Limitations
 
 ### Cost tracking 
 Arize shows token counts per call for batch traffic out of the box. Cost in dollars
