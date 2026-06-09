@@ -20,6 +20,10 @@ By routing your Phoenix evaluation workloads through Doubleword's [batch API](ht
 - Arize Phoenix - run it locally/self-hosted (free, open-source) or use [Phoenix Cloud](https://app.phoenix.arize.com).
 - Python 3.11+.
 
+![Doubleword console login](images/steps/02-doubleword-console-login.png)
+
+![Generating a Doubleword API key in the Doubleword console](images/steps/03-doubleword-api-key.png)
+
 If you are using a coding agent to set up Phoenix and Doubleword, you can use the setup prompts to help you get started faster:
 ```text
 Follow the instructions from https://arize.com/docs/PROMPT.md and ask me questions as needed.
@@ -93,6 +97,8 @@ Phoenix now traces every call below automatically.
 Switching to batches from realtime is easy. `BatchOpenAI` automatically converts and upgrades them to batches.
 
 > Tip: You can see past and current runs as well as live updates on the batches page of [app.doubleword.ai](https://app.doubleword.ai). Choose a model from the [model catalog](https://docs.doubleword.ai/inference-api/model-pricing). Not sure which? Play around and compare with different models on the [playground](https://console.doubleword.ai/playground).
+
+![Comparing Doubleword models in the playground](images/steps/08-doubleword-playground-compare-models.png)
 
 Here we set up a batch client and generate answers on your eval set. In the next step we use a judge to grade the outputs.
 ```python
