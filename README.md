@@ -43,10 +43,23 @@ Do the same on the [Doubleword console](https://app.doubleword.ai/) and use the 
 
 To make Doubleword a first-class citizen in your workspace, add it to your provider list so Arize can securely route evaluation prompts to our async endpoints.
 
-1. In Arize, navigate to Settings > [AI Providers](https://app.arize.com/account/ai-providers). 
-2. Select the Custom Providers tab.
-3. Add Doubleword and paste your API key. (Because Doubleword is OpenAI-compatible, you can map the Base URL to Doubleword's endpoint `https://api.doubleword.ai/v1`).
-    Note: We are currently working with Arize to become a default, one-click provider in this dropdown. Choosing or adding custom providers requires admin privileges for your Arize AX workspace. 
+1. In Arize, navigate to Settings > [AI Providers](https://app.arize.com/account/ai-providers).
+2. Select the **Custom Providers** tab and add a new Custom Model Endpoint.
+3. Fill in the form as follows:
+
+| Field | Value |
+| --- | --- |
+| Integration Name | `Doubleword` (or any name you like) |
+| API Format | `OpenAI` |
+| API Key | Your Doubleword API key (e.g. `sk-...`) |
+| API Base URL | `https://api.doubleword.ai/v1` — include `/v1`; do **not** add `/chat/completions` |
+| Extra Headers | Leave empty |
+| OpenAI default models | **Off** — we're not using standard OpenAI models (though GPT-OSS models are available from doubleword) |
+| Custom Models → Model name | Your Doubleword model(s), e.g. `deepseek-ai/DeepSeek-V4-Pro` (see the [model catalog](https://docs.doubleword.ai/inference-api/model-pricing)) |
+
+4. (Optional) Under **Advanced Settings**, turn on *Supports function calling* if your models use tools. Set the **Authorized Org / Space** to your workspace, click **Test Integration**, then save.
+
+> Note: We are currently working with Arize to become a default, one-click provider in this dropdown. Adding custom providers requires admin privileges for your Arize AX workspace.
 
 ### Step 3: Select Your Project
 
