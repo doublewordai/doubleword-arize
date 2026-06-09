@@ -12,10 +12,12 @@ By routing your Arize evaluation workloads through Doubleword's [batch API](http
 
 > Note: Doubleword seamlessly fits with OpenAI compatible endpoints.
 
+> Using **Arize Phoenix**, the open-source alternative to Arize? Follow the [Doubleword × Arize Phoenix guide](./arize-phoenix.md) instead.
+
 ## Quickstart
 
 - A Doubleword API key — sign up at [app.doubleword.ai](https://app.doubleword.ai/) and generate a key on the API Keys page. 
-- An Arize account — either [Arize AX](https://app.arize.com) and/or [Phoenix Cloud](https://app.phoenix.arize.com). 
+- An Arize account — sign up at [Arize AX](https://app.arize.com). 
 - Python 3.11+. 
 
 If you are using a coding agent to set up Arize and Doubleword, you can use the setup prompts to help you get started faster:
@@ -58,10 +60,9 @@ Ensure tracing is enabled for your project so that inputs, outputs, and the even
 pip install autobatcher openinference-instrumentation-openai
 ```
 
-Add the tracing helper for whichever Arize product you use. Arize AX is their cloud platform, while Phoenix Cloud is their open-source platform if you prefer a self-hosted solution. To try it out locally or host it yourself with Docker (read more [here](https://arize.com/phoenix/) and see the repo [here](https://github.com/Arize-ai/phoenix)). 
+Add the Arize AX tracing helper:
 ```bash
-pip install arize-otel            # Arize AX
-pip install arize-phoenix-otel    # Phoenix Cloud
+pip install arize-otel
 ```
 
 ### Step 1 — Connect Arize
@@ -78,18 +79,6 @@ tracer_provider = register(
     project_name="llm-judge-evals", # Leave this or Rename this to your project name
 )
 OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
-```
-
-**Phoenix Cloud** - grab an API key from the Phoenix dashboard:
-
-```python
-import os
-from phoenix.otel import register
-
-os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = "https://app.phoenix.arize.com"
-os.environ["PHOENIX_API_KEY"] = "YOUR_PHOENIX_API_KEY"
-
-register(project_name="llm-judge-evals", auto_instrument=True)
 ```
 
 That's the entire Arize setup. Everything below is traced automatically.
@@ -191,4 +180,5 @@ Arize offers fantastic telemetry for traces, tokens, and scores. Doubleword dash
 - **Full worked example** — the async-evals workbook runs generate-then-judge over a dataset of 817 items from the [TruthfulQA](https://huggingface.co/datasets/truthfulqa/truthful_qa) dataset as an evaluation experiment with LLM-as-a-judge for $0.50 total. 
 - **autobatcher** — the batch client used here, also available for TypeScript:
   [github - autobatcher](https://github.com/doublewordai/autobatcher).
-- **Arize** — [Arize AX docs](https://arize.com/docs/ax) · [Phoenix docs](https://arize.com/docs/phoenix).
+- **Arize AX** — [docs](https://arize.com/docs/ax).
+- **Prefer open-source?** [Integrate Doubleword with Arize Phoenix](./arize-phoenix.md).
