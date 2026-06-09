@@ -175,6 +175,60 @@ async def main():
     return scores
 ```
 
+### Step 4 — Send the scores to Arize as evaluations
+
+So far the judge scores only live in the trace as text. To turn them into structured **evaluations** — sortable, filterable columns and metrics on each span — log them back to Arize, keyed by span ID. Wrap each item in a span so you can grab its ID, then push the scores with the Arize SDK.
+
+```bash
+pip install arize
+```
+
+```python
+import os
+import pandas as pd
+from opentelemetry import trace
+from arize import ArizeClient
+
+tracer = trace.get_tracer("doubleword-evals")
+
+async def run_item(client, q):
+    with tracer.start_as_current_span("qa") as span:
+        span.set_attribute("input.value", q)
+        answer = await generate(client, q)
+        scores = await judge(client, q, answer)   # {"relevance": .., "truthfulness": .., "tone": ..}
+        span.set_attribute("output.value", answer)
+        span_id = format(span.get_span_context().span_id, "016x")
+    return span_id, scores
+
+async def main():
+    async with BatchOpenAI(
+        api_key="YOUR_DOUBLEWORD_API_KEY",
+        base_url="https://api.doubleword.ai/v1",
+    ) as client:
+        return await asyncio.gather(*[run_item(client, q) for q in questions])
+
+results = asyncio.run(main())
+
+# One row per span: eval.<name>.score and .label
+rows = []
+for span_id, s in results:
+    row = {"context.span_id": span_id}
+    for name in ("relevance", "truthfulness", "tone"):
+        row[f"eval.{name}.score"] = float(s[name])
+        row[f"eval.{name}.label"] = "pass" if float(s[name]) >= 0.7 else "fail"
+    rows.append(row)
+
+ArizeClient(api_key=os.environ["ARIZE_API_KEY"]).spans.update_evaluations(
+    space_id=os.environ["ARIZE_SPACE_ID"],
+    project_name="llm-judge-evals",
+    dataframe=pd.DataFrame(rows),
+)
+```
+
+Refresh your project in Arize — every span now carries relevance, truthfulness, and tone scores you can sort, filter, and chart. You keep batch pricing for the judging and still get first-class evals.
+
+> Tip: spans need a few seconds to land in Arize before evals can attach. If a batch was slow, give it a moment (or re-run this last block) so the scores match up.
+
 ## Limitations
 
 ### Cost tracking 

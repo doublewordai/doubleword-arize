@@ -252,6 +252,50 @@ wheels = [
 ]
 
 [[package]]
+name = "arize"
+version = "8.33.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "openinference-semantic-conventions", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-exporter-otlp-proto-common", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-sdk", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-semantic-conventions", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "pandas", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "protobuf", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "pyarrow", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "python-dateutil", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "requests-futures", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "tqdm", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "typing-extensions", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "urllib3", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "wrapt", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/9d/f108ad2eb11a6903d56df389c1303035ca42e681b333e75c94c3a0166829/arize-8.33.0.tar.gz", hash = "sha256:dfac8635164fc2707aaf1c42b4c637a8967a5fc6d683f233f83d7aaf602cf5c4", size = 471928, upload-time = "2026-06-08T21:04:19.691Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/46/a294802296398c88ca6c4fcdbd891012e54396c08912314f035a3b0c8bea/arize-8.33.0-py3-none-any.whl", hash = "sha256:c3e302a34a59e0681b786f94b795524855e2f9d56c44753ebaf69afa2624ec8b", size = 1047247, upload-time = "2026-06-08T21:04:17.134Z" },
+]
+
+[[package]]
+name = "arize-otel"
+version = "0.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "openinference-instrumentation", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "openinference-semantic-conventions", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-exporter-otlp", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-proto", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "opentelemetry-sdk", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9e/70/e318acceb6d7807a376ac126bde32bd9457ddf7a525fdcd629d9672f1bcb/arize_otel-0.13.0.tar.gz", hash = "sha256:6ccd1e26be23a52a0dad2798c924036e2c73a0db086a2214c2817fcfa36a31e6", size = 16799, upload-time = "2026-05-27T20:14:56.61Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/21/8e/2e067e00f27aba8999dd610dada7c119d728a545b32d5381fe7898b32bb4/arize_otel-0.13.0-py3-none-any.whl", hash = "sha256:1748b42d432c6b8013200e62804baa20b0e471a074b1cfe573a9bd0026f6515b", size = 17745, upload-time = "2026-05-27T20:14:55.321Z" },
+]
+
+[[package]]
 name = "arize-phoenix"
 version = "16.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -809,6 +853,8 @@ name = "doubleword-arize"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "arize", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "arize-otel", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "arize-phoenix", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "autobatcher", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "click", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
@@ -832,6 +878,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "arize", specifier = ">=8.33.0" },
+    { name = "arize-otel", specifier = ">=0.13.0" },
     { name = "arize-phoenix", specifier = ">=16.0.0" },
     { name = "autobatcher", specifier = ">=0.1.0" },
     { name = "click", specifier = ">=8.1" },
@@ -3167,6 +3215,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed", size = 142856, upload-time = "2026-05-14T19:25:27.735Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", hash = "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0", size = 73075, upload-time = "2026-05-14T19:25:26.443Z" },
+]
+
+[[package]]
+name = "requests-futures"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/88/f8/175b823241536ba09da033850d66194c372c65c38804847ac9cef0239542/requests_futures-1.0.2.tar.gz", hash = "sha256:6b7eb57940336e800faebc3dab506360edec9478f7b22dc570858ad3aa7458da", size = 10356, upload-time = "2024-11-15T22:14:51.988Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/23/7c1096731c15c83826cb0dd42078b561a838aed44c36f370aeb815168106/requests_futures-1.0.2-py2.py3-none-any.whl", hash = "sha256:a3534af7c2bf670cd7aa730716e9e7d4386497554f87792be7514063b8912897", size = 7671, upload-time = "2024-11-15T22:14:50.255Z" },
 ]
 
 [[package]]
