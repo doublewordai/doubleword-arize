@@ -35,7 +35,13 @@ Use the documentation from https://doubleword.ai/llms.txt for help with the Doub
 
 If you don't have one already, create an account or log in to your [Arize workspace](https://app.arize.com). 
 
+![Arize AX login screen](images/steps/01-arize-ax-login.png)
+
 Do the same on the [Doubleword console](https://app.doubleword.ai/) and use the sidebar option 'API Keys' to generate a Doubleword API key.
+
+![Doubleword console login](images/steps/02-doubleword-console-login.png)
+
+![Generating a Doubleword API key in the Doubleword console](images/steps/03-doubleword-api-key.png)
 
 > Tip: Always keep API keys secure and never share them publicly.
 
@@ -43,8 +49,10 @@ Do the same on the [Doubleword console](https://app.doubleword.ai/) and use the 
 
 To make Doubleword a first-class citizen in your workspace, add it to your provider list so Arize can securely route evaluation prompts to our async endpoints.
 
+
 1. In Arize, navigate to Settings > [AI Providers](https://app.arize.com/account/ai-providers).
-2. Select the **Custom Providers** tab and add a new Custom Model Endpoint.
+![Arize AX custom AI provider options](images/steps/04-arize-custom-ai-provider.png)
+2. Select the Custom Model Endpoint to add a custom provider.
 3. Fill in the form as follows:
 
 | Field | Value |
@@ -61,6 +69,10 @@ To make Doubleword a first-class citizen in your workspace, add it to your provi
 
 5. Once you have added your Doubleword API key and the model name, the 'Test Integration' button will check that you are all set to then 'Save Integration'. 
 
+![Configuring Doubleword as a custom model provider in Arize AX](images/steps/05-arize-doubleword-provider-config.png)
+
+![Arize AX provider connection test successful](images/steps/06-arize-provider-connection-success.png)
+
 > Note: We are currently working with Arize to become a default, one-click provider in this dropdown. Adding custom providers requires admin privileges for your Arize AX workspace.
 
 ### Step 3: Select Your Project
@@ -70,6 +82,8 @@ In the Arize sidebar, go to **Observe → Tracing Projects**. Pick a name for th
 ### Step 4: Get your Space ID and API key
 
 Tracing is wired up in code (next section), and it needs two values from Arize. Open **Settings** and copy your **Space ID** and **API key** — you'll drop them into the setup below (or your `.env`).
+
+![Getting your Space ID and API key in Arize AX settings](images/steps/07-arize-space-id-and-api-key.png)
 
 ## Running an Evaluation
 
@@ -105,6 +119,8 @@ That's the entire Arize setup. Everything below is traced automatically.
 Switching to batches from realtime is easy. `BatchOpenAI` automatically converts and upgrades them to batches.
 
 > Tip: You can see past and current runs as well as live updates on the batches page of [app.doubleword.ai](https://app.doubleword.ai). Choose a model from the [model catalog](https://docs.doubleword.ai/inference-api/model-pricing). Not sure which? Play around and compare with different models on the [playground](https://console.doubleword.ai/playground).
+
+![Comparing Doubleword models in the playground](images/steps/08-doubleword-playground-compare-models.png)
 
 Here we show how you can set up a batch client and generate answers on your eval set. In the next step we will use a judge to grade the outputs from this step. 
 ```python
@@ -226,6 +242,12 @@ ArizeClient(api_key=os.environ["ARIZE_API_KEY"]).spans.update_evaluations(
 ```
 
 Refresh your project in Arize — every span now carries relevance, truthfulness, and tone scores you can sort, filter, and chart. You keep batch pricing for the judging and still get first-class evals.
+
+![LLM-as-judge evaluation results in Arize AX](images/steps/09-arize-doubleword-eval-results-1.png)
+
+![LLM-as-judge evaluation scores per span in Arize AX](images/steps/10-arize-doubleword-eval-results-2.png)
+
+![LLM-as-judge evaluation detail in Arize AX](images/steps/11-arize-doubleword-eval-results-3.png)
 
 > Tip: spans need a few seconds to land in Arize before evals can attach. If a batch was slow, give it a moment (or re-run this last block) so the scores match up.
 
