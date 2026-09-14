@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
+from .caching import cacheable_system
 from .judge import build_judge_messages
 
 DATASET_NAME = "truthfulqa/truthful_qa"
@@ -69,7 +70,7 @@ def build_generation_request(row: Row, max_tokens: int = 512) -> dict[str, Any]:
         "url": "/v1/chat/completions",
         "body": {
             "messages": [
-                {"role": "system", "content": GENERATION_SYSTEM},
+                {"role": "system", "content": cacheable_system(GENERATION_SYSTEM)},
                 {"role": "user", "content": row.question},
             ],
             "temperature": 0,

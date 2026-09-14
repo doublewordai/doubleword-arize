@@ -28,6 +28,7 @@ from autobatcher import BatchOpenAI
 from wasabi import msg
 
 from src import data
+from src.caching import cacheable_system
 from src.cli import DATASET_DISPLAY_NAME
 from src.config import settings
 from src.judge import Score, build_judge_messages
@@ -49,7 +50,7 @@ async def _generate(rows: list[data.Row]) -> tuple[dict[str, str], int, int]:
             r.id: client.chat.completions.create(
                 model=settings.model_chat,
                 messages=[
-                    {"role": "system", "content": data.GENERATION_SYSTEM},
+                    {"role": "system", "content": cacheable_system(data.GENERATION_SYSTEM)},
                     {"role": "user", "content": r.question},
                 ],
                 temperature=0,

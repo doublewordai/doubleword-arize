@@ -10,7 +10,11 @@ hallucination against ground truth rather than guessing.
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
+
+from .caching import cacheable_system
 
 JUDGE_SYSTEM = (
     "You are a strict evaluator. You score an assistant's answer to a question on three "
@@ -41,13 +45,13 @@ def build_judge_messages(
     question: str,
     answer: str,
     reference: list[str] | None = None,
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     parts = [f"Question:\n{question}\n", f"Assistant answer:\n{answer}\n"]
     if reference:
         joined = "\n".join(f"- {r}" for r in reference if r)
         parts.append(f"Reference correct answers:\n{joined}\n")
     parts.append("Score it now.")
     return [
-        {"role": "system", "content": JUDGE_SYSTEM},
+        {"role": "system", "content": cacheable_system(JUDGE_SYSTEM)},
         {"role": "user", "content": "\n".join(parts)},
     ]
