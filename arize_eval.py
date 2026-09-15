@@ -16,6 +16,8 @@ import time
 
 from dotenv import load_dotenv
 
+from src.caching import cacheable_system
+
 load_dotenv()
 
 # Longer OTLP export timeout (ms) so root spans land on slow/large runs.
@@ -71,7 +73,7 @@ async def run_item(client, q):
         jr = await client.chat.completions.create(
             model=MODEL,
             messages=[
-                {"role": "system", "content": JUDGE},
+                {"role": "system", "content": cacheable_system(JUDGE)},
                 {"role": "user", "content": f"Question: {q}\nAnswer: {answer}"},
             ],
             response_format={"type": "json_object"},
